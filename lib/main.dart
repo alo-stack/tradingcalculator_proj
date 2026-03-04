@@ -213,7 +213,7 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
     });
 
     try {
-      final List<NewsArticle> articles = await NewsService.fetchBusinessNews();
+      final List<NewsArticle> articles = await NewsService.fetchMarketNews();
       setState(() {
         newsArticles = articles;
         isLoading = false;
@@ -240,7 +240,7 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Business & Trading News',
+                      'Global Market Sentiment',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     if (lastUpdated != null)
@@ -280,7 +280,11 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Failed to load news',
@@ -305,9 +309,7 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
               }
 
               if (newsArticles.isEmpty) {
-                return const Center(
-                  child: Text('No news articles available'),
-                );
+                return const Center(child: Text('No news articles available'));
               }
 
               return RefreshIndicator(
@@ -318,7 +320,10 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
                   itemBuilder: (context, index) {
                     final NewsArticle article = newsArticles[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      margin: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 8,
+                      ),
                       child: InkWell(
                         onTap: () {
                           // Could open article URL in browser here
@@ -333,16 +338,22 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
                                   children: [
                                     Text(
                                       article.description,
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium,
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
                                       'Source: ${article.source}',
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                     Text(
                                       'Published: ${article.timeAgo}',
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ],
                                 ),
@@ -381,14 +392,21 @@ class _MarketNewsSectionState extends State<MarketNewsSection> {
                                   Icon(
                                     Icons.article_outlined,
                                     size: 14,
-                                    color: Theme.of(context).colorScheme.secondary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.secondary,
                                   ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       '${article.source} • ${article.timeAgo}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.secondary,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
                                           ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
