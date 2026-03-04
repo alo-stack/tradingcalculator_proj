@@ -69,7 +69,7 @@ class NewsService {
       // economy_fiscal = Economic Indicators (Tax/Spending)
 
       const String topics =
-          'blockchain,forex,financial_markets,energy_transportation,economy_monetary,economy_fiscal';
+          'blockchain,forex,crypto,gold,stock,oil,silver,indices,bonds,commodities';
 
       final Uri uri = Uri.parse(
         '$_baseUrl?function=NEWS_SENTIMENT&topics=$topics&sort=LATEST&limit=50&apikey=$_apiKey',
