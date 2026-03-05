@@ -162,7 +162,7 @@ class _FibonacciCalculatorScreenState extends State<FibonacciCalculatorScreen> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String>(
-                    value: selectedTrend,
+                    initialValue: selectedTrend,
                     items: ['Up', 'Down'].map((String trend) {
                       return DropdownMenuItem<String>(
                         value: trend,
@@ -388,7 +388,7 @@ class _FibonacciCalculatorScreenState extends State<FibonacciCalculatorScreen> {
                               'Level',
                               style: AppTypography.text(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -396,7 +396,7 @@ class _FibonacciCalculatorScreenState extends State<FibonacciCalculatorScreen> {
                               'Price',
                               style: AppTypography.text(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textSecondary,
                               ),
                             ),

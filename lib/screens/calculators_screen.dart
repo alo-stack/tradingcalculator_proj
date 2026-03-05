@@ -117,7 +117,7 @@ class CalculatorsScreen extends StatelessWidget {
                 ),
                 Text(
                   '$calculatorCount calculators',
-                  style: GoogleFonts.geist(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
                     color: AppColors.textMuted,
                   ),
@@ -157,7 +157,7 @@ class CalculatorsScreen extends StatelessWidget {
             children: [
               Text(
                 'CALCULATORS',
-                style: GoogleFonts.geist(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 1.2,
@@ -173,7 +173,7 @@ class CalculatorsScreen extends StatelessWidget {
                 ),
                 child: Text(
                   '$calculatorCount',
-                  style: GoogleFonts.geist(
+                  style: GoogleFonts.inter(
                     fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
@@ -246,7 +246,7 @@ class _CalculatorCard extends StatelessWidget {
                     children: [
                       Text(
                         calculator.title,
-                        style: GoogleFonts.geist(
+                        style: GoogleFonts.inter(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: AppColors.textPrimary,
@@ -256,7 +256,7 @@ class _CalculatorCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         calculator.description,
-                        style: GoogleFonts.geist(
+                        style: GoogleFonts.inter(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),

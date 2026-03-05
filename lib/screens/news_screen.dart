@@ -82,7 +82,7 @@ class _NewsScreenState extends State<NewsScreen> {
                   const SizedBox(width: 5),
                   Text(
                     'Live',
-                    style: GoogleFonts.geist(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
                       color: AppColors.positive,
                       fontWeight: FontWeight.w500,
@@ -126,7 +126,7 @@ class _NewsScreenState extends State<NewsScreen> {
                 children: [
                   Text(
                     'MARKET NEWS',
-                    style: GoogleFonts.geist(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
                       letterSpacing: 1.2,
                       fontWeight: FontWeight.w500,
@@ -136,7 +136,7 @@ class _NewsScreenState extends State<NewsScreen> {
                   const Spacer(),
                   Text(
                     'Updated ${_formatTime(lastUpdated ?? DateTime.now())}',
-                    style: GoogleFonts.geist(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
                       color: AppColors.textMuted,
                     ),
@@ -166,7 +166,7 @@ class _NewsScreenState extends State<NewsScreen> {
           children: [
             Text(
               'MARKET NEWS',
-              style: GoogleFonts.geist(
+              style: GoogleFonts.inter(
                 fontSize: 11,
                 letterSpacing: 1.2,
                 fontWeight: FontWeight.w500,
@@ -176,7 +176,7 @@ class _NewsScreenState extends State<NewsScreen> {
             const Spacer(),
             Text(
               'Updated --:--',
-              style: GoogleFonts.geist(
+              style: GoogleFonts.inter(
                 fontSize: 11,
                 color: AppColors.textMuted,
               ),
@@ -302,7 +302,7 @@ class _NewsCard extends StatelessWidget {
                       ),
                       child: Text(
                         article.source,
-                        style: GoogleFonts.geist(
+                        style: GoogleFonts.inter(
                           fontSize: 11,
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w400,
@@ -312,7 +312,7 @@ class _NewsCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       '· ${article.timeAgo}',
-                      style: GoogleFonts.geist(
+                      style: GoogleFonts.inter(
                         fontSize: 11,
                         color: AppColors.textMuted,
                       ),
@@ -324,7 +324,7 @@ class _NewsCard extends StatelessWidget {
                   article.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.geist(
+                  style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -337,7 +337,7 @@ class _NewsCard extends StatelessWidget {
                   article.description,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.geist(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
                     color: AppColors.textSecondary,
                     height: 1.5,

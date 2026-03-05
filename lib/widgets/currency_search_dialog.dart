@@ -168,7 +168,7 @@ class _CurrencySearchDialogState extends State<CurrencySearchDialog> with Single
                               currency.symbol,
                               style: TextStyle(
                                 color: isCrypto ? Colors.orange : Colors.blue,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -177,7 +177,7 @@ class _CurrencySearchDialogState extends State<CurrencySearchDialog> with Single
                               Text(
                                 currency.code,
                                 style: TextStyle(
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                 ),
                               ),
                               const SizedBox(width: 8),

@@ -202,7 +202,7 @@ class _DrawdownCalculatorScreenState extends State<DrawdownCalculatorScreen> {
                                   'Period',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.center,
@@ -213,7 +213,7 @@ class _DrawdownCalculatorScreenState extends State<DrawdownCalculatorScreen> {
                                   'Starting',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.right,
@@ -224,7 +224,7 @@ class _DrawdownCalculatorScreenState extends State<DrawdownCalculatorScreen> {
                                   'Loss',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.center,
@@ -235,7 +235,7 @@ class _DrawdownCalculatorScreenState extends State<DrawdownCalculatorScreen> {
                                   'Ending',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.right,

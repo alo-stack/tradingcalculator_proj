@@ -232,7 +232,7 @@ class _PipCalculatorScreenState extends State<PipCalculatorScreen> {
                         selectedCurrency!.symbol,
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),

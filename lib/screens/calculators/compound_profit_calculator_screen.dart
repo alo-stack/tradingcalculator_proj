@@ -194,7 +194,7 @@ class _CompoundProfitCalculatorScreenState extends State<CompoundProfitCalculato
                                   'Period',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.center,
@@ -205,7 +205,7 @@ class _CompoundProfitCalculatorScreenState extends State<CompoundProfitCalculato
                                   'Starting',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.right,
@@ -216,7 +216,7 @@ class _CompoundProfitCalculatorScreenState extends State<CompoundProfitCalculato
                                   'Gain',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.center,
@@ -227,7 +227,7 @@ class _CompoundProfitCalculatorScreenState extends State<CompoundProfitCalculato
                                   'Ending',
                                   style: AppTypography.text(
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
                                   ),
                                   textAlign: TextAlign.right,

@@ -195,7 +195,7 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
                           key: ValueKey<String>(selectedLeverage),
-                          value: selectedLeverage,
+                          initialValue: selectedLeverage,
                           items: leverageOptions
                               .map((String leverage) => DropdownMenuItem<String>(
                                     value: leverage,
@@ -346,7 +346,7 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
                   selectedCurrency!.symbol,
                   style: AppTypography.text(
                     fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accent,
                   ),
                 ),

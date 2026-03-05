@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
 
 /// QuickPips Design System - Premium iOS-Inspired Dark Mode
 abstract class AppColors {
@@ -255,6 +254,24 @@ class AppTheme {
         ),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
+      ),
+      
+      textTheme: TextTheme(
+        displayLarge: AppTypography.display(fontSize: 57, fontWeight: FontWeight.w700),
+        displayMedium: AppTypography.display(fontSize: 45, fontWeight: FontWeight.w700),
+        displaySmall: AppTypography.display(fontSize: 36, fontWeight: FontWeight.w700),
+        headlineLarge: AppTypography.display(fontSize: 32, fontWeight: FontWeight.w700),
+        headlineMedium: AppTypography.display(fontSize: 28, fontWeight: FontWeight.w700),
+        headlineSmall: AppTypography.display(fontSize: 24, fontWeight: FontWeight.w700),
+        titleLarge: AppTypography.text(fontSize: 22, fontWeight: FontWeight.w600),
+        titleMedium: AppTypography.text(fontSize: 18, fontWeight: FontWeight.w600),
+        titleSmall: AppTypography.text(fontSize: 14, fontWeight: FontWeight.w600),
+        bodyLarge: AppTypography.text(fontSize: 16, fontWeight: FontWeight.w400),
+        bodyMedium: AppTypography.text(fontSize: 14, fontWeight: FontWeight.w400),
+        bodySmall: AppTypography.text(fontSize: 12, fontWeight: FontWeight.w400),
+        labelLarge: AppTypography.rounded(fontSize: 14, fontWeight: FontWeight.w500),
+        labelMedium: AppTypography.rounded(fontSize: 12, fontWeight: FontWeight.w500),
+        labelSmall: AppTypography.rounded(fontSize: 11, fontWeight: FontWeight.w500),
       ),
     );
   }

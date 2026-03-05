@@ -239,7 +239,7 @@ class _CryptoFxConverterScreenState extends State<CryptoFxConverterScreen> {
                   currency.symbol,
                   style: AppTypography.text(
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.accent,
                   ),
                 ),

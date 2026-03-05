@@ -168,7 +168,7 @@ class _SymbolSearchDialogState extends State<SymbolSearchDialog> with SingleTick
                           title: Text(
                             symbol.symbol,
                             style: TextStyle(
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                             ),
                           ),
                           subtitle: Text(symbol.description),

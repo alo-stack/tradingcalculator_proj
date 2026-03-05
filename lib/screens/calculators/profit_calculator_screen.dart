@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/calculator_engine.dart';
 import '../../core/app_theme.dart';
@@ -234,7 +235,7 @@ class _ProfitCalculatorScreenState extends State<ProfitCalculatorScreen> {
                           child: Text(
                             'Buy',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.geist(
+                            style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: isLong ? Colors.white : AppColors.textSecondary,
@@ -267,7 +268,7 @@ class _ProfitCalculatorScreenState extends State<ProfitCalculatorScreen> {
                           child: Text(
                             'Sell',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.geist(
+                            style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: !isLong ? Colors.white : AppColors.textSecondary,

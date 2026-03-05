@@ -101,7 +101,7 @@ class _CryptoExchangeFeesCalculatorScreenState extends State<CryptoExchangeFeesC
               ),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: selectedExchange,
+                initialValue: selectedExchange,
                 items: exchanges
                     .map((String exchange) => DropdownMenuItem<String>(
                           value: exchange,
@@ -127,7 +127,7 @@ class _CryptoExchangeFeesCalculatorScreenState extends State<CryptoExchangeFeesC
               ),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                value: selectedFeesDenomination,
+                initialValue: selectedFeesDenomination,
                 items: denominations
                     .map((String denomination) => DropdownMenuItem<String>(
                           value: denomination,

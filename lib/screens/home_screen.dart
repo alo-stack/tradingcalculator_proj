@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../core/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +15,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
+  final List<NavItemData> _navItems = [
+    NavItemData(icon: Icons.calculate, label: 'Calculators'),
+    NavItemData(icon: Icons.newspaper, label: 'News'),
+  ];
+
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
     
@@ -27,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (index == 0) {
       context.go('/calculators');
-    } else {
+    } else if (index == 1) {
       context.go('/news');
     }
   }
@@ -46,42 +50,41 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           widget.child,
-          // Floating pill navbar
+          // Bottom navigation bar - centered with breathing room
           Positioned(
             bottom: 16,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                height: 56,
-                width: 220,
+                height: 65,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: AppRadius.pill,
                   border: Border.all(color: AppColors.border, width: 0.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _NavItem(
-                      icon: Icons.calculate_outlined,
-                      isActive: _currentIndex == 0,
-                      onTap: () => _onTabTapped(0),
+                  children: List.generate(
+                    _navItems.length,
+                    (index) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _NavItem(
+                        icon: _navItems[index].icon,
+                        label: _navItems[index].label,
+                        isActive: _currentIndex == index,
+                        onTap: () => _onTabTapped(index),
+                      ),
                     ),
-                    const SizedBox(width: 20),
-                    _NavItem(
-                      icon: Icons.newspaper_outlined,
-                      isActive: _currentIndex == 1,
-                      onTap: () => _onTabTapped(1),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -92,13 +95,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+class NavItemData {
+  final IconData icon;
+  final String label;
+
+  NavItemData({required this.icon, required this.label});
+}
+
 class _NavItem extends StatelessWidget {
   final IconData icon;
+  final String label;
   final bool isActive;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.icon,
+    required this.label,
     required this.isActive,
     required this.onTap,
   });
@@ -107,26 +119,34 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Active indicator — 3px orange pill
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: isActive ? 16 : 0,
-            height: 3,
-            decoration: BoxDecoration(
-              color: AppColors.accent,
-              borderRadius: AppRadius.pill,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.accent.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: AppRadius.sm,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isActive ? AppColors.accent : AppColors.textMuted,
+              size: 24,
             ),
-          ),
-          const SizedBox(height: 4),
-          Icon(
-            icon,
-            color: isActive ? AppColors.textPrimary : AppColors.textMuted,
-            size: 24,
-          ),
-        ],
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: AppTypography.text(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                color: isActive ? AppColors.accent : AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

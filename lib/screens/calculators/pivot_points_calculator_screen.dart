@@ -159,7 +159,7 @@ class _PivotPointsCalculatorScreenState extends State<PivotPointsCalculatorScree
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   DropdownButtonFormField<String>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     items: pivotTypes.map((String type) {
                       return DropdownMenuItem<String>(
                         value: type,

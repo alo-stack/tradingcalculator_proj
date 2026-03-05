@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'dart:ui';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/app_theme.dart';
 
@@ -52,7 +51,7 @@ class CalculatorScaffold extends StatelessWidget {
                           ),
                           Text(
                             'Back',
-                            style: GoogleFonts.geist(
+                            style: GoogleFonts.inter(
                               fontSize: 13,
                               color: AppColors.textSecondary,
                             ),
@@ -160,7 +159,7 @@ class CalculatorInputField extends StatelessWidget {
       keyboardType: keyboardType ?? TextInputType.number,
       maxLines: maxLines,
       onChanged: onChanged,
-      style: GoogleFonts.geist(
+      style: GoogleFonts.inter(
         color: AppColors.textPrimary,
         fontSize: 15,
         fontWeight: FontWeight.w500,
@@ -170,22 +169,22 @@ class CalculatorInputField extends StatelessWidget {
         filled: true,
         fillColor: AppColors.surfaceHigh,
         labelText: label,
-        labelStyle: GoogleFonts.geist(
+        labelStyle: GoogleFonts.inter(
           fontSize: 13,
           color: AppColors.textSecondary,
         ),
         hintText: hint,
-        hintStyle: GoogleFonts.geist(
+        hintStyle: GoogleFonts.inter(
           fontSize: 13,
           color: AppColors.textMuted,
         ),
         prefixText: prefixText,
-        prefixStyle: GoogleFonts.geist(
+        prefixStyle: GoogleFonts.inter(
           color: AppColors.textMuted,
           fontSize: 15,
         ),
         suffixText: suffix,
-        suffixStyle: GoogleFonts.geist(
+        suffixStyle: GoogleFonts.inter(
           fontSize: 15,
           color: AppColors.textSecondary,
         ),
@@ -313,7 +312,7 @@ class ResultRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.geist(
+            style: GoogleFonts.inter(
               fontSize: 13,
               color: AppColors.textSecondary,
             ),
@@ -321,14 +320,14 @@ class ResultRow extends StatelessWidget {
           Text(
             value,
             style: isLarge
-                ? GoogleFonts.geist(
+                ? GoogleFonts.inter(
                     fontSize: 34,
                     fontWeight: FontWeight.w700,
                     letterSpacing: -1.0,
                     color: valueColor,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   )
-                : GoogleFonts.geist(
+                : GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                     color: valueColor,
@@ -388,7 +387,7 @@ class CalculateButton extends StatelessWidget {
               )
             : Text(
                 label,
-                style: GoogleFonts.geist(
+                style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
