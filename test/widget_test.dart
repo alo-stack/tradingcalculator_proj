@@ -5,6 +5,7 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_application_1/main.dart';
@@ -14,17 +15,25 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const QuickPipsApp());
+    await tester.pumpAndSettle();
 
-    expect(find.text('Forex Calculators'), findsOneWidget);
-    expect(find.text('Calculator'), findsOneWidget);
-    expect(find.text('News'), findsOneWidget);
+    expect(find.text('FOREX CALCULATORS'), findsOneWidget);
+    expect(find.text('Calculators'), findsOneWidget);
     expect(find.text('Pip Calculator'), findsOneWidget);
     expect(find.text('Position Size Calculator'), findsOneWidget);
 
-    await tester.tap(find.text('News'));
+    // On compact widths the tools menu lives in a Drawer.
+    if (find.text('News Calendar').evaluate().isEmpty) {
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+    }
+
+    await tester.tap(find.text('News Calendar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Market News'), findsOneWidget);
-    expect(find.text('Business & Trading News'), findsOneWidget);
+    expect(find.text('CRYPTO'), findsWidgets);
+    expect(find.text('FOREX'), findsWidgets);
+    expect(find.text('FUTURES'), findsWidgets);
   });
 }

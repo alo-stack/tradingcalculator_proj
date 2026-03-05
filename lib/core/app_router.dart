@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/calculators/index.dart';
-import '../screens/home_screen.dart';
+import '../screens/home_screen_new.dart';
 import '../screens/calculators_screen.dart';
 import '../screens/news_screen.dart';
+import '../screens/futures_calculators.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -16,7 +17,7 @@ class AppRouter {
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) {
-          return HomeScreen(child: child);
+          return HomeScreenNew(child: child);
         },
         routes: [
           GoRoute(
@@ -94,6 +95,11 @@ class AppRouter {
         path: '/calculator/currency-converter',
         name: 'currency-converter',
         builder: (context, state) => const CryptoFxConverterScreen(),
+      ),
+      GoRoute(
+        path: '/calculator/futures',
+        name: 'futures-calculators',
+        builder: (context, state) => const FuturesCalculatorsScreen(),
       ),
     ],
   );
