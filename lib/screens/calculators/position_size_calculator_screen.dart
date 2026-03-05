@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/calculator_engine.dart';
+import '../../core/app_theme.dart';
 import '../../data/symbols_data.dart';
 import '../../data/currencies_data.dart';
 import '../../widgets/symbol_search_dialog.dart';
 import '../../widgets/currency_search_dialog.dart';
-import '../widgets/number_input_field.dart';
-import '../widgets/result_row.dart';
+import '../../widgets/calculator_components.dart';
+import 'package:intl/intl.dart';
 
 class PositionSizeCalculatorScreen extends StatefulWidget {
   const PositionSizeCalculatorScreen({super.key});
@@ -129,226 +130,114 @@ class _PositionSizeCalculatorScreenState extends State<PositionSizeCalculatorScr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Position Size Calculator')),
+    final NumberFormat formatter = NumberFormat.currency(
+      symbol: selectedCurrency?.symbol ?? '\$',
+      decimalDigits: 2,
+    );
+
+    return CalculatorScaffold(
+      title: 'Position Size Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Section 1: Instrument
-          Text('Instrument', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          _buildSymbolSelector(),
-          const SizedBox(height: 16),
-
-          // Section 2: Deposit Currency
-          Text('Deposit Currency', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          _buildCurrencySelector(),
-          const SizedBox(height: 16),
-
-          // Section 3: Stop Loss (Pips)
-          NumberInputField(
-            controller: stopLossPipsController,
-            label: 'Stop Loss (pips)',
-            hint: 'e.g. 200',
+          CalculatorSection(
+            title: 'Instrument',
+            children: [
+              CalculatorSelector(
+                label: 'Trading Pair',
+                value: selectedSymbol != null
+                    ? '${selectedSymbol!.symbol} - ${selectedSymbol!.description}'
+                    : null,
+                placeholder: 'Select an instrument',
+                onTap: _selectSymbol,
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-
-          // Section 4: Account Balance
-          NumberInputField(
-            controller: accountBalanceController,
-            label: 'Account Balance',
-            hint: 'e.g. 100000',
+          const SizedBox(height: AppSpacing.md),
+          CalculatorSection(
+            title: 'Account Details',
+            children: [
+              CalculatorSelector(
+                label: 'Deposit Currency',
+                value: selectedCurrency?.name,
+                placeholder: 'Select currency',
+                onTap: _selectCurrency,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Account Balance',
+                controller: accountBalanceController,
+                hint: 'e.g. 100000',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Risk Percentage (%)',
+                controller: riskPercentController,
+                hint: 'e.g. 2',
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-
-          // Section 5: Risk Percentage
-          NumberInputField(
-            controller: riskPercentController,
-            label: 'Risk (%)',
-            hint: 'e.g. 2',
+          const SizedBox(height: AppSpacing.md),
+          CalculatorSection(
+            title: 'Trade Settings',
+            children: [
+              CalculatorInputField(
+                label: 'Stop Loss (Pips)',
+                controller: stopLossPipsController,
+                hint: 'e.g. 200',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Pip Size',
+                controller: pipSizeController,
+                hint: 'e.g. 0.0001',
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-
-          // Section 6: Pip Size (Read-only)
-          _buildReadOnlyPipSize(),
-          const SizedBox(height: 14),
-
-          // Calculate Button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(
+            onPressed: calculate,
+            label: 'Calculate Position Size',
+          ),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(
+              message: validationMessage!,
+              isError: true,
+            ),
           ],
-
-          // Results
           if (result != null) ...[
-            const SizedBox(height: 16),
-            _buildResultsSection(),
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Results',
+              children: [
+                ResultRow(
+                  label: 'Lots (Trade Size)',
+                  value: result!.lotSize.toStringAsFixed(2),
+                  isLarge: true,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Divider(color: AppColors.border),
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Units',
+                  value: result!.units.toStringAsFixed(0),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Money at Risk',
+                  value: formatter.format(result!.riskAmount),
+                  isNegative: true,
+                ),
+              ],
+            ),
           ],
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );
-  }
-
-  Widget _buildSymbolSelector() {
-    return InkWell(
-      onTap: _selectSymbol,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            if (selectedSymbol != null) ...[
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _getCategoryColor(selectedSymbol!.category).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  _getCategoryIcon(selectedSymbol!.category),
-                  color: _getCategoryColor(selectedSymbol!.category),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(selectedSymbol!.symbol, style: Theme.of(context).textTheme.titleMedium),
-                    Text(selectedSymbol!.description, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ] else ...[
-              const Expanded(child: Text('Select an instrument')),
-            ],
-            const Icon(Icons.arrow_drop_down),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCurrencySelector() {
-    return InkWell(
-      onTap: _selectCurrency,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            if (selectedCurrency != null) ...[
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  selectedCurrency!.symbol,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(selectedCurrency!.name, style: Theme.of(context).textTheme.titleMedium),
-                    Text(selectedCurrency!.code, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ),
-            ] else ...[
-              const Expanded(child: Text('Select a currency')),
-            ],
-            const Icon(Icons.arrow_drop_down),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReadOnlyPipSize() {
-    return TextField(
-      controller: pipSizeController,
-      enabled: false,
-      decoration: InputDecoration(
-        labelText: '${selectedSymbol?.symbol ?? 'Instrument'} 1 Pip Size',
-        border: const OutlineInputBorder(),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      ),
-    );
-  }
-
-  Widget _buildResultsSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Results', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            ResultRow(
-              label: 'Lots (trade size)',
-              value: result!.lotSize.toStringAsFixed(2),
-            ),
-            const SizedBox(height: 8),
-            ResultRow(
-              label: 'Units (trade size)',
-              value: result!.units.toStringAsFixed(0),
-            ),
-            const SizedBox(height: 8),
-            ResultRow(
-              label: 'Money at risk',
-              value: '${selectedCurrency!.symbol}${result!.riskAmount.toStringAsFixed(2)}',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getCategoryIcon(SymbolCategory category) {
-    switch (category) {
-      case SymbolCategory.forex:
-        return Icons.currency_exchange;
-      case SymbolCategory.cryptocurrency:
-        return Icons.currency_bitcoin;
-      case SymbolCategory.stock:
-        return Icons.trending_up;
-      case SymbolCategory.indices:
-        return Icons.show_chart;
-      case SymbolCategory.commodity:
-        return Icons.brightness_7;
-    }
-  }
-
-  Color _getCategoryColor(SymbolCategory category) {
-    switch (category) {
-      case SymbolCategory.forex:
-        return Colors.blue;
-      case SymbolCategory.cryptocurrency:
-        return Colors.orange;
-      case SymbolCategory.stock:
-        return Colors.green;
-      case SymbolCategory.indices:
-        return Colors.purple;
-      case SymbolCategory.commodity:
-        return Colors.amber;
-    }
   }
 }

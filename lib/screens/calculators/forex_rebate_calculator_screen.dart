@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/calculator_engine.dart';
-import '../widgets/number_input_field.dart';
-import '../widgets/result_row.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
+import 'package:intl/intl.dart';
 
 class ForexRebateCalculatorScreen extends StatefulWidget {
   const ForexRebateCalculatorScreen({super.key});
@@ -56,29 +57,63 @@ class _ForexRebateCalculatorScreenState extends State<ForexRebateCalculatorScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Forex Rebate Calculator')),
+    final NumberFormat formatter = NumberFormat.currency(
+      symbol: '\$',
+      decimalDigits: 2,
+    );
+
+    return CalculatorScaffold(
+      title: 'Forex Rebate Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          NumberInputField(controller: tradedLotsController, label: 'Traded Lots', hint: 'e.g. 10'),
-          const SizedBox(height: 10),
-          NumberInputField(controller: rebatePerLotController, label: 'Rebate Per Lot', hint: 'e.g. 2.5'),
-          const SizedBox(height: 14),
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-          if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
-          if (result != null) ...[
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: ResultRow(label: 'Total Rebate', value: result!.toStringAsFixed(2)),
+          CalculatorSection(
+            title: 'Rebate Details',
+            children: [
+              CalculatorInputField(
+                label: 'Traded Lots',
+                controller: tradedLotsController,
+                hint: 'e.g. 10',
               ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Rebate Per Lot',
+                controller: rebatePerLotController,
+                hint: 'e.g. 2.5',
+                suffix: '\$',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(
+            onPressed: calculate,
+            label: 'Calculate Rebate',
+          ),
+          if (validationMessage != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(
+              message: validationMessage!,
+              isError: true,
             ),
           ],
+          if (result != null) ...[
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Result',
+              children: [
+                ResultRow(
+                  label: 'Total Rebate',
+                  value: formatter.format(result),
+                  isLarge: true,
+                  isPositive: true,
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );

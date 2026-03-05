@@ -13,7 +13,7 @@ void main() {
   testWidgets('MVP shows calculator list and news sections', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const TradingCalculatorApp());
+    await tester.pumpWidget(const QuickPipsApp());
 
     expect(find.text('Forex Calculators'), findsOneWidget);
     expect(find.text('Calculator'), findsOneWidget);

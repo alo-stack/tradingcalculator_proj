@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/calculator_engine.dart';
+import '../../core/app_theme.dart';
 import '../../data/symbols_data.dart';
 import '../../data/currencies_data.dart';
 import '../../widgets/symbol_search_dialog.dart';
 import '../../widgets/currency_search_dialog.dart';
-import '../widgets/number_input_field.dart';
+import '../../widgets/calculator_components.dart';
+import 'package:intl/intl.dart';
 
 class ProfitCalculatorScreen extends StatefulWidget {
   const ProfitCalculatorScreen({super.key});
@@ -149,244 +152,197 @@ class _ProfitCalculatorScreenState extends State<ProfitCalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Forex Profit Calculator')),
+    final NumberFormat formatter = NumberFormat.currency(
+      symbol: selectedCurrency?.symbol ?? '\$',
+      decimalDigits: 2,
+    );
+
+    return CalculatorScaffold(
+      title: 'Profit Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Row 1: Instrument & Deposit Currency
-          Row(
+          CalculatorSection(
+            title: 'Instrument',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Instrument', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    _buildSymbolSelector(),
-                  ],
-                ),
+              CalculatorSelector(
+                label: 'Trading Pair',
+                value: selectedSymbol != null
+                    ? '${selectedSymbol!.symbol} - ${selectedSymbol!.description}'
+                    : null,
+                placeholder: 'Select an instrument',
+                onTap: _selectSymbol,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Deposit currency', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    _buildCurrencySelector(),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorSelector(
+                label: 'Deposit Currency',
+                value: selectedCurrency?.name,
+                placeholder: 'Select currency',
+                onTap: _selectCurrency,
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Row 2: Buy/Sell & Lots
-          Row(
+          const SizedBox(height: AppSpacing.md),
+          CalculatorSection(
+            title: 'Trade Details',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Text(
+                'Position Type',
+                style: AppTypography.text(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceHigh,
+                  borderRadius: AppRadius.sm,
+                  border: Border.all(
+                    color: AppColors.border,
+                    width: 0.5,
+                  ),
+                ),
+                child: Row(
                   children: [
-                    Text('Buy or Sell', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    _buildBuySellSelector(),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          if (!isLong) {
+                            setState(() {
+                              isLong = true;
+                              result = null;
+                              profitInMoney = null;
+                              profitInPips = null;
+                            });
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          decoration: BoxDecoration(
+                            color: isLong ? AppColors.accent : Colors.transparent,
+                            borderRadius: AppRadius.xs,
+                          ),
+                          child: Text(
+                            'Buy',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.geist(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isLong ? Colors.white : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          if (isLong) {
+                            setState(() {
+                              isLong = false;
+                              result = null;
+                              profitInMoney = null;
+                              profitInPips = null;
+                            });
+                          }
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          padding: const EdgeInsets.symmetric(vertical: 9),
+                          decoration: BoxDecoration(
+                            color: !isLong ? AppColors.accent : Colors.transparent,
+                            borderRadius: AppRadius.xs,
+                          ),
+                          child: Text(
+                            'Sell',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.geist(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: !isLong ? Colors.white : AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('◆Lots (trade size)', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: lotsController, label: '', hint: 'e.g. 1'),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Lots (Trade Size)',
+                controller: lotsController,
+                hint: 'e.g. 1',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Open Price',
+                controller: openPriceController,
+                hint: 'e.g. 1.16085',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Close Price',
+                controller: closePriceController,
+                hint: 'e.g. 1.18085',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Pip Size',
+                controller: pipSizeController,
+                hint: 'e.g. 0.0001',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Row 3: Open Price & Close Price
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Open price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: openPriceController, label: '', hint: 'e.g. 1.16085'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Close price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: closePriceController, label: '', hint: 'e.g. 1.18085'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Pip Size (Read-only)
-          Text('${selectedSymbol?.symbol ?? 'Instrument'} 1 Pip Size',
-              style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          TextField(
-            controller: pipSizeController,
-            enabled: false,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Calculate Button
-          FilledButton(
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(
             onPressed: calculate,
-            child: const Text('Calculate'),
+            label: 'Calculate Profit',
           ),
-
-          // Error message
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(
+              message: validationMessage!,
+              isError: true,
+            ),
           ],
-
-          // Results
-          if (profitInMoney != null && selectedCurrency != null) ...[
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          if (profitInMoney != null && profitInPips != null) ...[
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Results',
               children: [
-                Column(
-                  children: [
-                    Text('Profit in money', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${selectedCurrency!.symbol}${profitInMoney!.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: profitInMoney! >= 0
-                            ? Colors.green
-                            : Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                ResultRow(
+                  label: 'Profit in Money',
+                  value: formatter.format(profitInMoney),
+                  isLarge: true,
+                  isPositive: profitInMoney! >= 0,
+                  isNegative: profitInMoney! < 0,
                 ),
-                Column(
-                  children: [
-                    Text('Profit in pips', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      profitInPips!.toStringAsFixed(0),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: profitInPips! >= 0
-                            ? Colors.green
-                            : Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: AppSpacing.sm),
+                Divider(color: AppColors.border),
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Profit in Pips',
+                  value: profitInPips!.toStringAsFixed(1),
+                  isPositive: profitInPips! >= 0,
+                  isNegative: profitInPips! < 0,
                 ),
               ],
             ),
           ],
+          const SizedBox(height: AppSpacing.xxl),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSymbolSelector() {
-    return InkWell(
-      onTap: _selectSymbol,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            if (selectedSymbol != null) ...[
-              Expanded(
-                child: Text(
-                  selectedSymbol!.symbol,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ] else ...[
-              const Expanded(child: Text('Select')),
-            ],
-            const Icon(Icons.arrow_drop_down),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCurrencySelector() {
-    return InkWell(
-      onTap: _selectCurrency,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            if (selectedCurrency != null) ...[
-              Expanded(
-                child: Text(
-                  selectedCurrency!.name,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ] else ...[
-              const Expanded(child: Text('Select')),
-            ],
-            const Icon(Icons.arrow_drop_down),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBuySellSelector() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: SegmentedButton<bool>(
-        segments: const [
-          ButtonSegment(value: true, label: Text('Buy')),
-          ButtonSegment(value: false, label: Text('Sell')),
-        ],
-        selected: {isLong},
-        onSelectionChanged: (Set<bool> selection) {
-          setState(() {
-            isLong = selection.first;
-            result = null;
-            profitInMoney = null;
-            profitInPips = null;
-          });
-        },
       ),
     );
   }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../core/calculator_engine.dart';
+import '../../core/app_theme.dart';
 import '../../data/currencies_data.dart';
 import '../../data/symbols_data.dart';
+import '../../widgets/calculator_components.dart';
 import '../../widgets/currency_search_dialog.dart';
 import '../../widgets/symbol_search_dialog.dart';
-import '../widgets/number_input_field.dart';
 
 class ForexMarginCalculatorScreen extends StatefulWidget {
   const ForexMarginCalculatorScreen({super.key});
@@ -123,113 +125,129 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Forex Margin Calculator')),
+    final formatter = NumberFormat('#,##0.00');
+    
+    return CalculatorScaffold(
+      title: 'Forex Margin Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Instrument', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    _buildSymbolSelector(),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Instrument',
+                          style: AppTypography.text(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildSymbolSelector(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Deposit currency',
+                          style: AppTypography.text(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildCurrencySelector(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Deposit currency', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    _buildCurrencySelector(),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Leverage',
+                          style: AppTypography.text(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey<String>(selectedLeverage),
+                          value: selectedLeverage,
+                          items: leverageOptions
+                              .map((String leverage) => DropdownMenuItem<String>(
+                                    value: leverage,
+                                    child: Text(leverage),
+                                  ))
+                              .toList(),
+                          onChanged: (String? value) {
+                            if (value != null) {
+                              setState(() {
+                                selectedLeverage = value;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: '${selectedSymbol?.symbol.split('/').first ?? 'Asset'} lots',
+                      controller: lotsController,
+                      hint: 'e.g. 1',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: '${selectedSymbol?.symbol ?? 'Instrument'} price',
+                controller: marketPriceController,
+                hint: 'e.g. 1.15993',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Leverage', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey<String>(selectedLeverage),
-                      initialValue: selectedLeverage,
-                      items: leverageOptions
-                          .map((String leverage) => DropdownMenuItem<String>(
-                                value: leverage,
-                                child: Text(leverage),
-                              ))
-                          .toList(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedLeverage = value;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${selectedSymbol?.symbol.split('/').first ?? 'Asset'} lots (trade size)',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: lotsController, label: '', hint: 'e.g. 1'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          NumberInputField(
-            controller: marketPriceController,
-            label: '${selectedSymbol?.symbol ?? 'Instrument'} price',
-            hint: 'e.g. 1.15993',
-          ),
-          const SizedBox(height: 14),
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
           if (result != null && selectedCurrency != null) ...[
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Deposit amount to open the trade',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${selectedCurrency!.symbol}${result!.requiredMargin.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Result',
+              children: [
+                ResultRow(
+                  label: 'Margin required',
+                  value: '${selectedCurrency!.symbol}${formatter.format(result!.requiredMargin)}',
+                  isLarge: true,
                 ),
-              ),
+              ],
             ),
           ],
         ],
@@ -241,10 +259,17 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
     return InkWell(
       onTap: _selectSymbol,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceElevated,
+          borderRadius: AppRadius.sm,
+          border: Border.all(
+            color: AppColors.border,
+            width: 0.5,
+          ),
         ),
         child: Row(
           children: [
@@ -254,7 +279,7 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
                 height: 32,
                 decoration: BoxDecoration(
                   color: _getCategoryColor(selectedSymbol!.category).withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppRadius.xs,
                 ),
                 child: Icon(
                   _getCategoryIcon(selectedSymbol!.category),
@@ -266,14 +291,29 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
               Expanded(
                 child: Text(
                   selectedSymbol!.symbol,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: AppTypography.text(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ] else ...[
-              const Expanded(child: Text('Select instrument')),
+              Expanded(
+                child: Text(
+                  'Select instrument',
+                  style: AppTypography.text(
+                    fontSize: 16,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
             ],
-            const Icon(Icons.arrow_drop_down),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -284,23 +324,30 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
     return InkWell(
       onTap: _selectCurrency,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceElevated,
+          borderRadius: AppRadius.sm,
+          border: Border.all(
+            color: AppColors.border,
+            width: 0.5,
+          ),
         ),
         child: Row(
           children: [
             if (selectedCurrency != null) ...[
               CircleAvatar(
                 radius: 16,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: AppColors.accent.withValues(alpha: 0.2),
                 child: Text(
                   selectedCurrency!.symbol,
-                  style: TextStyle(
+                  style: AppTypography.text(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
@@ -308,14 +355,29 @@ class _ForexMarginCalculatorScreenState extends State<ForexMarginCalculatorScree
               Expanded(
                 child: Text(
                   selectedCurrency!.name,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: AppTypography.text(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ] else ...[
-              const Expanded(child: Text('Select currency')),
+              Expanded(
+                child: Text(
+                  'Select currency',
+                  style: AppTypography.text(
+                    fontSize: 16,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
             ],
-            const Icon(Icons.arrow_drop_down),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
           ],
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/number_input_field.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class FibonacciCalculatorScreen extends StatefulWidget {
   const FibonacciCalculatorScreen({super.key});
@@ -137,241 +138,302 @@ class _FibonacciCalculatorScreenState extends State<FibonacciCalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Fibonacci Calculator')),
+    return CalculatorScaffold(
+      title: 'Fibonacci Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Trend direction dropdown
-          Text('Trend direction', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          DropdownButton<String>(
-            value: selectedTrend,
-            isExpanded: true,
-            items: ['Up', 'Down'].map((String trend) {
-              return DropdownMenuItem<String>(
-                value: trend,
-                child: Text(trend),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  selectedTrend = newValue;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Retracement / Projection radio buttons
-          Text('Type', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedType = 'Retracement';
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: selectedType == 'Retracement'
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline,
-                        width: selectedType == 'Retracement' ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selectedType == 'Retracement'
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline,
-                            ),
-                          ),
-                          child: selectedType == 'Retracement'
-                              ? Center(
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Retracement'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedType = 'Projection';
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: selectedType == 'Projection'
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline,
-                        width: selectedType == 'Projection' ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selectedType == 'Projection'
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline,
-                            ),
-                          ),
-                          child: selectedType == 'Projection'
-                              ? Center(
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Projection'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Low and High price inputs
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Low price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: lowController, label: '', hint: 'e.g. 900'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('High price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: highController, label: '', hint: 'e.g. 1000'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          // End price (only for Projection)
-          if (selectedType == 'Projection') ...[
-            const SizedBox(height: 16),
-            Text('End price', style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 8),
-            NumberInputField(controller: endController, label: '', hint: 'e.g. 2000'),
-          ],
-          
-          const SizedBox(height: 24),
-
-          // Calculate button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-
-          // Error message
-          if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          ],
-
-          // Results table
-          if (fibonacciLevels != null && fibonacciLevels!.isNotEmpty) ...[
-            const SizedBox(height: 24),
-            Card(
-              child: Column(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Table header
-                  Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Level',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Price',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
+                  Text(
+                    'Trend direction',
+                    style: AppTypography.text(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
                     ),
                   ),
-
-                  // Table rows
-                  ...fibonacciLevels!.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            entry.key,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          Text(
-                            entry.value.toStringAsFixed(1),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                  const SizedBox(height: AppSpacing.sm),
+                  DropdownButtonFormField<String>(
+                    value: selectedTrend,
+                    items: ['Up', 'Down'].map((String trend) {
+                      return DropdownMenuItem<String>(
+                        value: trend,
+                        child: Text(trend),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedTrend = newValue;
+                        });
+                      }
+                    },
+                  ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Type',
+                    style: AppTypography.text(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedType = 'Retracement';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'Retracement'
+                                  ? AppColors.surfaceElevated
+                                  : Colors.transparent,
+                              borderRadius: AppRadius.sm,
+                              border: Border.all(
+                                color: selectedType == 'Retracement'
+                                    ? AppColors.accent
+                                    : AppColors.border,
+                                width: selectedType == 'Retracement' ? 1.5 : 0.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: selectedType == 'Retracement'
+                                          ? AppColors.accent
+                                          : AppColors.border,
+                                    ),
+                                  ),
+                                  child: selectedType == 'Retracement'
+                                      ? Center(
+                                          child: Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: AppColors.accent,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Retracement',
+                                  style: AppTypography.text(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedType = 'Projection';
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'Projection'
+                                  ? AppColors.surfaceElevated
+                                  : Colors.transparent,
+                              borderRadius: AppRadius.sm,
+                              border: Border.all(
+                                color: selectedType == 'Projection'
+                                    ? AppColors.accent
+                                    : AppColors.border,
+                                width: selectedType == 'Projection' ? 1.5 : 0.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: selectedType == 'Projection'
+                                          ? AppColors.accent
+                                          : AppColors.border,
+                                    ),
+                                  ),
+                                  child: selectedType == 'Projection'
+                                      ? Center(
+                                          child: Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: AppColors.accent,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Projection',
+                                  style: AppTypography.text(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Low price',
+                      controller: lowController,
+                      hint: 'e.g. 900',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'High price',
+                      controller: highController,
+                      hint: 'e.g. 1000',
+                    ),
+                  ),
+                ],
+              ),
+              if (selectedType == 'Projection') ...[
+                const SizedBox(height: AppSpacing.md),
+                CalculatorInputField(
+                  label: 'End price',
+                  controller: endController,
+                  hint: 'e.g. 2000',
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
+          if (validationMessage != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
+          ],
+          if (fibonacciLevels != null && fibonacciLevels!.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Fibonacci Levels',
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.sm,
+                    border: Border.all(color: AppColors.border, width: 0.5),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      Container(
+                        color: AppColors.surfaceElevated,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Level',
+                              style: AppTypography.text(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            Text(
+                              'Price',
+                              style: AppTypography.text(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      ...fibonacciLevels!.entries.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                entry.key,
+                                style: AppTypography.text(
+                                  fontSize: 15,
+                                  color: AppColors.accent,
+                                ),
+                              ),
+                              Text(
+                                entry.value.toStringAsFixed(1),
+                                style: AppTypography.text(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ],

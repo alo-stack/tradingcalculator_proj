@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../core/app_theme.dart';
 import '../../data/currencies_data.dart';
 import '../../services/conversion_rates_service.dart';
+import '../../widgets/calculator_components.dart';
 import '../../widgets/currency_search_dialog.dart';
 
 class CryptoFxConverterScreen extends StatefulWidget {
@@ -215,23 +217,30 @@ class _CryptoFxConverterScreenState extends State<CryptoFxConverterScreen> {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceElevated,
+          borderRadius: AppRadius.sm,
+          border: Border.all(
+            color: AppColors.border,
+            width: 0.5,
+          ),
         ),
         child: Row(
           children: [
             if (currency != null) ...[
               CircleAvatar(
                 radius: 14,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: AppColors.accent.withValues(alpha: 0.2),
                 child: Text(
                   currency.symbol,
-                  style: TextStyle(
+                  style: AppTypography.text(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    color: AppColors.accent,
                   ),
                 ),
               ),
@@ -241,13 +250,28 @@ class _CryptoFxConverterScreenState extends State<CryptoFxConverterScreen> {
                   currency.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: AppTypography.text(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ] else ...[
-              const Expanded(child: Text('Select currency')),
+              Expanded(
+                child: Text(
+                  'Select currency',
+                  style: AppTypography.text(
+                    fontSize: 15,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
             ],
-            const Icon(Icons.arrow_drop_down),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -259,89 +283,98 @@ class _CryptoFxConverterScreenState extends State<CryptoFxConverterScreen> {
     final double? directRate = _rateFromTo;
     final double? inverseRate = _rateToFrom;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Real-time Currency Converter')),
+    return CalculatorScaffold(
+      title: 'Real-time Currency Converter',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          Row(
+          CalculatorSection(
+            title: 'Currencies',
             children: [
-              Expanded(
-                child: _buildCompactCurrencySelector(
-                  currency: fromCurrency,
-                  onTap: _selectFromCurrency,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildCompactCurrencySelector(
+                      currency: fromCurrency,
+                      onTap: _selectFromCurrency,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _swapCurrencies,
+                    icon: const Icon(Icons.swap_horiz),
+                  ),
+                  Expanded(
+                    child: _buildCompactCurrencySelector(
+                      currency: toCurrency,
+                      onTap: _selectToCurrency,
+                    ),
+                  ),
+                ],
               ),
-              IconButton(
-                onPressed: _swapCurrencies,
-                icon: const Icon(Icons.swap_horiz),
-              ),
-              Expanded(
-                child: _buildCompactCurrencySelector(
-                  currency: toCurrency,
-                  onTap: _selectToCurrency,
-                ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: fromCurrency?.code ?? 'From',
+                      controller: fromAmountController,
+                      hint: '0.00',
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onChanged: (_) => _updateToFromFromAmount(),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: toCurrency?.code ?? 'To',
+                      controller: toAmountController,
+                      hint: '0.00',
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      onChanged: (_) => _updateFromFromToAmount(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: fromAmountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (_) => _updateToFromFromAmount(),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: toAmountController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (_) => _updateFromFromToAmount(),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           if (isLoadingRates) const LinearProgressIndicator(),
           if (validationMessage != null) ...[
-            const SizedBox(height: 8),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
           if (directRate != null && inverseRate != null && fromCurrency != null && toCurrency != null) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Column(
-                  children: [
-                    Text(
-                      '1 ${fromCurrency!.name} = ${_formatRate(directRate)} ${toCurrency!.name}',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '1 ${toCurrency!.name} = ${_formatRate(inverseRate)} ${fromCurrency!.name}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Exchange Rates',
+              children: [
+                ResultRow(
+                  label: '1 ${fromCurrency!.code}',
+                  value: '${_formatRate(directRate)} ${toCurrency!.code}',
                 ),
-              ),
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: '1 ${toCurrency!.code}',
+                  value: '${_formatRate(inverseRate)} ${fromCurrency!.code}',
+                ),
+              ],
             ),
           ],
-          const SizedBox(height: 8),
-          if (lastUpdated != null)
+          if (lastUpdated != null) ...[
+            const SizedBox(height: AppSpacing.md),
             Text(
               _relativeTime(),
               textAlign: TextAlign.right,
-              style: Theme.of(context).textTheme.bodySmall,
+              style: AppTypography.text(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
+          ],
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );

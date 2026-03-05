@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../core/calculator_engine.dart';
-import '../widgets/number_input_field.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class CryptoExchangeFeesCalculatorScreen extends StatefulWidget {
   const CryptoExchangeFeesCalculatorScreen({super.key});
@@ -76,181 +78,121 @@ class _CryptoExchangeFeesCalculatorScreenState extends State<CryptoExchangeFeesC
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Crypto Exchange Fees')),
+    final formatter = NumberFormat('#,##0.00');
+    
+    return CalculatorScaffold(
+      title: 'Crypto Exchange Fees',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 0,
+            ),
         children: [
-          Row(
+          CalculatorSection(
+            title: 'Exchange Settings',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Exchange/Provider', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey<String>(selectedExchange),
-                      initialValue: selectedExchange,
-                      items: exchanges
-                          .map((String exchange) => DropdownMenuItem<String>(
-                                value: exchange,
-                                child: Text(exchange),
-                              ))
-                          .toList(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedExchange = value;
-                          });
-                        }
-                      },
-                    ),
-                  ],
+              Text(
+                'Exchange/Provider',
+                style: AppTypography.text(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Fees Denomination', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey<String>(selectedFeesDenomination),
-                      initialValue: selectedFeesDenomination,
-                      items: denominations
-                          .map((String denomination) => DropdownMenuItem<String>(
-                                value: denomination,
-                                child: Text(denomination),
-                              ))
-                          .toList(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedFeesDenomination = value;
-                            if (value == 'Euro') {
-                              selectedPayingAsset = 'Euro';
-                            } else {
-                              selectedPayingAsset = 'US Dollar';
-                            }
-                          });
-                        }
-                      },
-                    ),
-                  ],
+              const SizedBox(height: AppSpacing.sm),
+              DropdownButtonFormField<String>(
+                value: selectedExchange,
+                items: exchanges
+                    .map((String exchange) => DropdownMenuItem<String>(
+                          value: exchange,
+                          child: Text(exchange),
+                        ))
+                    .toList(),
+                onChanged: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedExchange = value;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Fees Denomination',
+                style: AppTypography.text(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
                 ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              DropdownButtonFormField<String>(
+                value: selectedFeesDenomination,
+                items: denominations
+                    .map((String denomination) => DropdownMenuItem<String>(
+                          value: denomination,
+                          child: Text(denomination),
+                        ))
+                    .toList(),
+                onChanged: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedFeesDenomination = value;
+                      if (value == 'Euro') {
+                        selectedPayingAsset = 'Euro';
+                      } else {
+                        selectedPayingAsset = 'US Dollar';
+                      }
+                    });
+                  }
+                },
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
+          const SizedBox(height: AppSpacing.md),
+          CalculatorSection(
+            title: 'Trade Details',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Buying/Receiving', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey<String>(selectedBuyingAsset),
-                      initialValue: selectedBuyingAsset,
-                      items: assets
-                          .map((String asset) => DropdownMenuItem<String>(
-                                value: asset,
-                                child: Text(asset),
-                              ))
-                          .toList(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedBuyingAsset = value;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
+              CalculatorInputField(
+                label: '${selectedBuyingAsset.split(' ').first} Amount',
+                controller: btcAmountController,
+                hint: 'e.g. 1',
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Paying with/Selling', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      key: ValueKey<String>(selectedPayingAsset),
-                      initialValue: selectedPayingAsset,
-                      items: <String>['US Dollar', 'Euro', 'USDT']
-                          .map((String asset) => DropdownMenuItem<String>(
-                                value: asset,
-                                child: Text(asset),
-                              ))
-                          .toList(),
-                      onChanged: (String? value) {
-                        if (value != null) {
-                          setState(() {
-                            selectedPayingAsset = value;
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: '${selectedPayingAsset.split(' ').first} Amount',
+                controller: usdAmountController,
+                hint: 'e.g. 66813.472',
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Custom Fees Rate (%)',
+                controller: feePercentController,
+                hint: 'e.g. 2',
+                suffix: '%',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: NumberInputField(
-                  controller: btcAmountController,
-                  label: '${selectedBuyingAsset.split(' ').first} amount',
-                  hint: 'e.g. 1',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: NumberInputField(
-                  controller: usdAmountController,
-                  label: '${selectedPayingAsset.split(' ').first} amount',
-                  hint: 'e.g. 66813.472',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          NumberInputField(controller: feePercentController, label: 'Custom fees rate (%)', hint: 'e.g. 2'),
-          const SizedBox(height: 14),
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
           if (result != null) ...[
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Fees',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '$_currencySymbol${result!.tradingFee.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Result',
+              children: [
+                ResultRow(
+                  label: 'Trading Fees',
+                  value: '$_currencySymbol${formatter.format(result!.tradingFee)}',
+                  isLarge: true,
                 ),
-              ),
+              ],
             ),
           ],
+          const SizedBox(height: AppSpacing.xxl),
         ],
       ),
     );

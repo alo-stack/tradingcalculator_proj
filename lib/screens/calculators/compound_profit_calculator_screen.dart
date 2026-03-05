@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../core/calculator_engine.dart';
-import '../widgets/number_input_field.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class CompoundProfitCalculatorScreen extends StatefulWidget {
   const CompoundProfitCalculatorScreen({super.key});
@@ -99,183 +101,196 @@ class _CompoundProfitCalculatorScreenState extends State<CompoundProfitCalculato
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Compounding Calculator')),
+    final formatter = NumberFormat('#,##0.00');
+    
+    return CalculatorScaffold(
+      title: 'Compounding Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 0,
+            ),
         children: [
-          // Input row 1: Starting balance & Number of periods
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Starting balance', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: principalController, label: '', hint: 'e.g. 20000'),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Starting balance',
+                      controller: principalController,
+                      hint: 'e.g. 20000',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Number of periods',
+                      controller: periodsController,
+                      hint: 'e.g. 12',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Number of periods', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: periodsController, label: '', hint: 'e.g. 12'),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Gain % per period',
+                controller: returnRateController,
+                hint: 'e.g. 5',
+                suffix: '%',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Input row 2: Gain % per period
-          Text('Gain % per period', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          NumberInputField(controller: returnRateController, label: '', hint: 'e.g. 5'),
-          const SizedBox(height: 24),
-
-          // Calculate Button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-
-          // Error message
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
-
-          // Results
           if (result != null) ...[
-            const SizedBox(height: 24),
-
-            // Summary Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Results',
               children: [
-                Column(
-                  children: [
-                    Text('Ending balance', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      result!.finalBalance.toStringAsFixed(2),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
+                ResultRow(
+                  label: 'Ending balance',
+                  value: formatter.format(result!.finalBalance),
+                  isLarge: true,
                 ),
-                Column(
-                  children: [
-                    Text('Total Gain', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${(result!.totalProfit / (result!.finalBalance - result!.totalProfit) * 100).toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Total Gain',
+                  value: '${(result!.totalProfit / (result!.finalBalance - result!.totalProfit) * 100).toStringAsFixed(1)}%',
+                  isPositive: true,
                 ),
               ],
             ),
-
-            const SizedBox(height: 24),
-
-            // Detailed breakdown table
-            if (periodBreakdown != null && periodBreakdown!.isNotEmpty)
-              Card(
-                child: Column(
-                  children: [
-                    // Table header
-                    Container(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 40,
-                            child: Text(
-                              'Period',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Starting balance',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Total Gain',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Ending balance',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ],
-                      ),
+            if (periodBreakdown != null && periodBreakdown!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
+              CalculatorSection(
+                title: 'Period Breakdown',
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.sm,
+                      border: Border.all(color: AppColors.border, width: 0.5),
                     ),
-
-                    // Table rows
-                    ...periodBreakdown!.map((period) {
-                      final isEvenRow = period['period'] % 2 == 0;
-                      return Container(
-                        color: isEvenRow ? Theme.of(context).colorScheme.surfaceContainerLow : Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 40,
-                              child: Text(
-                                '${period['period']}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                period['starting'].toStringAsFixed(2),
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                '${period['gain_percent'].toStringAsFixed(2)}%',
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                period['ending'].toStringAsFixed(2),
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        Container(
+                          color: AppColors.surfaceElevated,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 40,
+                                child: Text(
+                                  'Period',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.right,
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: Text(
+                                  'Starting',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Gain',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Ending',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    }),
-                  ],
-                ),
+                        ...periodBreakdown!.map((period) {
+                          final isEvenRow = period['period'] % 2 == 0;
+                          return Container(
+                            color: isEvenRow ? AppColors.surfaceHigh : Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 40,
+                                  child: Text(
+                                    '${period['period']}',
+                                    style: AppTypography.text(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    period['starting'].toStringAsFixed(2),
+                                    style: AppTypography.text(fontSize: 13),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    '${period['gain_percent'].toStringAsFixed(2)}%',
+                                    style: AppTypography.text(
+                                      fontSize: 13,
+                                      color: AppColors.positive,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    period['ending'].toStringAsFixed(2),
+                                    style: AppTypography.text(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+            ],
           ],
         ],
       ),

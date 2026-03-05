@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/number_input_field.dart';
+import 'package:intl/intl.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class DrawdownCalculatorScreen extends StatefulWidget {
   const DrawdownCalculatorScreen({super.key});
@@ -107,182 +109,196 @@ class _DrawdownCalculatorScreenState extends State<DrawdownCalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Forex Drawdown Calculator')),
+    final formatter = NumberFormat('#,##0.00');
+    
+    return CalculatorScaffold(
+      title: 'Forex Drawdown Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Row 1: Starting balance & Consecutive losses
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Starting balance', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: startingBalanceController, label: '', hint: 'e.g. 20000'),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Starting balance',
+                      controller: startingBalanceController,
+                      hint: 'e.g. 20000',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Consecutive losses',
+                      controller: consecutiveLossesController,
+                      hint: 'e.g. 10',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Consecutive losses', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: consecutiveLossesController, label: '', hint: 'e.g. 10'),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Loss % per trade',
+                controller: lossPercentController,
+                hint: 'e.g. 2',
+                suffix: '%',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Loss % per trade
-          Text('Loss % per trade', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          NumberInputField(controller: lossPercentController, label: '', hint: 'e.g. 2'),
-          const SizedBox(height: 24),
-
-          // Calculate Button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-
-          // Error message
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
-
-          // Results
           if (endingBalance != null && totalLossPercent != null) ...[
-            const SizedBox(height: 24),
-
-            // Summary Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Results',
               children: [
-                Column(
-                  children: [
-                    Text('Ending balance', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      endingBalance!.toStringAsFixed(2),
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                ResultRow(
+                  label: 'Ending balance',
+                  value: formatter.format(endingBalance!),
+                  isLarge: true,
                 ),
-                Column(
-                  children: [
-                    Text('Total Loss', style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${totalLossPercent!.toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Total Loss',
+                  value: '${totalLossPercent!.toStringAsFixed(1)}%',
+                  isNegative: true,
                 ),
               ],
             ),
-
-            const SizedBox(height: 24),
-
-            // Detailed breakdown table
-            if (periodBreakdown != null && periodBreakdown!.isNotEmpty)
-              Card(
-                child: Column(
-                  children: [
-                    // Table header
-                    Container(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 50,
-                            child: Text(
-                              'Period',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Starting balance',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Total Loss',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Ending balance',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ],
-                      ),
+            if (periodBreakdown != null && periodBreakdown!.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.xl),
+              CalculatorSection(
+                title: 'Period Breakdown',
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.sm,
+                      border: Border.all(color: AppColors.border, width: 0.5),
                     ),
-
-                    // Table rows
-                    ...periodBreakdown!.map((period) {
-                      final isEvenRow = period['period'] % 2 == 0;
-                      return Container(
-                        color: isEvenRow ? Theme.of(context).colorScheme.surfaceContainerLow : Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 50,
-                              child: Text(
-                                '${period['period']}',
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                period['starting'].toStringAsFixed(0),
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.right,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                '${period['loss_percent'].toStringAsFixed(2)}%',
-                                style: Theme.of(context).textTheme.bodySmall,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                period['ending'].toStringAsFixed(0),
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        Container(
+                          color: AppColors.surfaceElevated,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm,
+                            horizontal: AppSpacing.md,
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 50,
+                                child: Text(
+                                  'Period',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.right,
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                child: Text(
+                                  'Starting',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Loss',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  'Ending',
+                                  style: AppTypography.text(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.right,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    }),
-                  ],
-                ),
+                        ...periodBreakdown!.map((period) {
+                          final isEvenRow = period['period'] % 2 == 0;
+                          return Container(
+                            color: isEvenRow ? AppColors.surfaceHigh : Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.sm,
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 50,
+                                  child: Text(
+                                    '${period['period']}',
+                                    style: AppTypography.text(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    period['starting'].toStringAsFixed(0),
+                                    style: AppTypography.text(fontSize: 13),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    '${period['loss_percent'].toStringAsFixed(2)}%',
+                                    style: AppTypography.text(
+                                      fontSize: 13,
+                                      color: AppColors.negative,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    period['ending'].toStringAsFixed(0),
+                                    style: AppTypography.text(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+            ],
           ],
         ],
       ),

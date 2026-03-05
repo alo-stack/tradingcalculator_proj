@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/number_input_field.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class PivotPointsCalculatorScreen extends StatefulWidget {
   const PivotPointsCalculatorScreen({super.key});
@@ -134,127 +135,114 @@ class _PivotPointsCalculatorScreenState extends State<PivotPointsCalculatorScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Pivot Points Calculator')),
+    return CalculatorScaffold(
+      title: 'Pivot Points Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Type selector
-          Text('Pivot Type', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          DropdownButton<String>(
-            value: selectedType,
-            isExpanded: true,
-            items: pivotTypes.map((String type) {
-              return DropdownMenuItem<String>(
-                value: type,
-                child: Text(type),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                setState(() {
-                  selectedType = newValue;
-                });
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // Row 1: High & Low prices
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('High price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: highController, label: '', hint: 'e.g. 1000'),
-                  ],
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Pivot Type',
+                    style: AppTypography.text(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  DropdownButtonFormField<String>(
+                    value: selectedType,
+                    items: pivotTypes.map((String type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          selectedType = newValue;
+                        });
+                      }
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Low price', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: lowController, label: '', hint: 'e.g. 900'),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'High price',
+                      controller: highController,
+                      hint: 'e.g. 1000',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Low price',
+                      controller: lowController,
+                      hint: 'e.g. 900',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Close price',
+                controller: closeController,
+                hint: 'e.g. 950',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Close price
-          Text('Close price', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          NumberInputField(controller: closeController, label: '', hint: 'e.g. 950'),
-          const SizedBox(height: 24),
-
-          // Calculate Button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-
-          // Error message
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
-
-          // Results
           if (pivotResults != null) ...[
-            const SizedBox(height: 24),
-
-            Card(
-              child: Column(
-                children: [
-                  // Resistance levels
-                  Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Resistance Levels',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildResultRow(context, 'R3', pivotResults!['R3']!),
-                  _buildResultRow(context, 'R2', pivotResults!['R2']!),
-                  _buildResultRow(context, 'R1', pivotResults!['R1']!),
-
-                  const Divider(height: 16, indent: 12, endIndent: 12),
-
-                  // Pivot Point
-                  _buildResultRow(context, 'Pivot Point (PP)', pivotResults!['PP']!, isPivot: true),
-
-                  const Divider(height: 16, indent: 12, endIndent: 12),
-
-                  // Support levels
-                  Container(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Support Levels',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildResultRow(context, 'S1', pivotResults!['S1']!),
-                  _buildResultRow(context, 'S2', pivotResults!['S2']!),
-                  _buildResultRow(context, 'S3', pivotResults!['S3']!),
-                ],
-              ),
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Resistance Levels',
+              children: [
+                _buildResultRow(context, 'R3', pivotResults!['R3']!, isResistance: true),
+                const SizedBox(height: AppSpacing.sm),
+                _buildResultRow(context, 'R2', pivotResults!['R2']!, isResistance: true),
+                const SizedBox(height: AppSpacing.sm),
+                _buildResultRow(context, 'R1', pivotResults!['R1']!, isResistance: true),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Pivot Point',
+              children: [
+                ResultRow(
+                  label: 'PP',
+                  value: pivotResults!['PP']!.toStringAsFixed(4),
+                  isLarge: true,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Support Levels',
+              children: [
+                _buildResultRow(context, 'S1', pivotResults!['S1']!, isSupport: true),
+                const SizedBox(height: AppSpacing.sm),
+                _buildResultRow(context, 'S2', pivotResults!['S2']!, isSupport: true),
+                const SizedBox(height: AppSpacing.sm),
+                _buildResultRow(context, 'S3', pivotResults!['S3']!, isSupport: true),
+              ],
             ),
           ],
         ],
@@ -266,35 +254,14 @@ class _PivotPointsCalculatorScreenState extends State<PivotPointsCalculatorScree
     BuildContext context,
     String label,
     double value, {
-    bool isPivot = false,
+    bool isResistance = false,
+    bool isSupport = false,
   }) {
-    Color valueColor = Theme.of(context).colorScheme.onSurface;
-    if (label.startsWith('R')) {
-      valueColor = Theme.of(context).colorScheme.error;
-    } else if (label.startsWith('S')) {
-      valueColor = Theme.of(context).colorScheme.primary;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: isPivot ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          Text(
-            value.toStringAsFixed(4),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: valueColor,
-            ),
-          ),
-        ],
-      ),
+    return ResultRow(
+      label: label,
+      value: value.toStringAsFixed(4),
+      isNegative: isResistance,
+      isPositive: isSupport,
     );
   }
 }

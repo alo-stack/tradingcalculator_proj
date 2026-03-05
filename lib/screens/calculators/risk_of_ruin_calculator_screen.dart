@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/number_input_field.dart';
 import 'dart:math';
+import '../../core/app_theme.dart';
+import '../../widgets/calculator_components.dart';
 
 class RiskOfRuinCalculatorScreen extends StatefulWidget {
   const RiskOfRuinCalculatorScreen({super.key});
@@ -156,123 +157,88 @@ class _RiskOfRuinCalculatorScreenState extends State<RiskOfRuinCalculatorScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Risk of Ruin Calculator')),
+    return CalculatorScaffold(
+      title: 'Risk of Ruin Calculator',
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 0,
+        ),
         children: [
-          // Row 1: Win rate & Avg profit/loss
-          Row(
+          CalculatorSection(
+            title: 'Input Parameters',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Win rate %', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: winRateController, label: '', hint: 'e.g. 50'),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Win rate %',
+                      controller: winRateController,
+                      hint: 'e.g. 50',
+                      suffix: '%',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Avg profit/loss',
+                      controller: avgProfitLossController,
+                      hint: 'e.g. 1',
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Avg profit/loss', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: avgProfitLossController, label: '', hint: 'e.g. 1'),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Risk per trade %',
+                      controller: riskPerTradeController,
+                      hint: 'e.g. 2',
+                      suffix: '%',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: CalculatorInputField(
+                      label: 'Number of trades',
+                      controller: numberOfTradesController,
+                      hint: 'e.g. 100',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CalculatorInputField(
+                label: 'Max drawdown allowed %',
+                controller: maxDrawdownController,
+                hint: 'e.g. 30',
+                suffix: '%',
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Row 2: Risk per trade & Number of trades
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Risk per trade %', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: riskPerTradeController, label: '', hint: 'e.g. 2'),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Number of trades', style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    NumberInputField(controller: numberOfTradesController, label: '', hint: 'e.g. 100'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Max drawdown
-          Text('Max drawdown allowed %', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 8),
-          NumberInputField(controller: maxDrawdownController, label: '', hint: 'e.g. 30'),
-          const SizedBox(height: 24),
-
-          // Calculate Button
-          FilledButton(onPressed: calculate, child: const Text('Calculate')),
-
-          // Error message
+          const SizedBox(height: AppSpacing.xl),
+          CalculateButton(onPressed: calculate),
           if (validationMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(validationMessage!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            const SizedBox(height: AppSpacing.md),
+            MessageBanner(message: validationMessage!),
           ],
-
-          // Results
           if (drawdownRisk != null && ruinRisk != null) ...[
-            const SizedBox(height: 24),
-
-            // Summary Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(height: AppSpacing.xl),
+            CalculatorSection(
+              title: 'Results',
               children: [
-                Column(
-                  children: [
-                    Text(
-                      'Risk of peak-to-valley\ndrawdown',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${drawdownRisk!.toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
+                ResultRow(
+                  label: 'Risk of peak-to-valley drawdown',
+                  value: '${drawdownRisk!.toStringAsFixed(1)}%',
+                  isNegative: true,
                 ),
-                Column(
-                  children: [
-                    Text(
-                      'Risk of ruin',
-                      style: Theme.of(context).textTheme.bodySmall,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${ruinRisk!.toStringAsFixed(1)}%',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: AppSpacing.sm),
+                ResultRow(
+                  label: 'Risk of ruin',
+                  value: '${ruinRisk!.toStringAsFixed(1)}%',
+                  isNegative: true,
                 ),
               ],
             ),
