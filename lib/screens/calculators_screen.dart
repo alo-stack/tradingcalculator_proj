@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -134,183 +135,233 @@ class _CalculatorsScreenState extends State<CalculatorsScreen> {
     return _calculators.where((c) => c.category == category).length;
   }
 
-  String get _categoryLabel {
-    switch (_selectedCategory) {
-      case CalculatorCategory.forex:
-        return 'FOREX';
-      case CalculatorCategory.crypto:
-        return 'CRYPTO';
-      case CalculatorCategory.futures:
-        return 'FUTURES';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final int calculatorCount = _visibleCalculators.length;
-
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        titleSpacing: AppSpacing.md,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Calculators',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            Text(
-              '$calculatorCount calculators',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          Row(
-            children: [
-              Text(
-                '$_categoryLabel CALCULATORS',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                  color: AppColors.textMuted,
+      body: CustomScrollView(
+        slivers: [
+          // Pinned category buttons
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _CategoryHeaderDelegate(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 6,
+                  bottom: 10,
                 ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.surfacePill,
-                  borderRadius: AppRadius.pill,
-                ),
-                child: Text(
-                  '$calculatorCount',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0A0A0A),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFF1F1F21), width: 0.5),
                   ),
                 ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'CALCULATORS',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                          color: const Color(0xFF8E8E93),
+                        ),
+                      ),
+                    ),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _FilterPill(
+                                  label: 'FOREX',
+                                  count: _countBy(CalculatorCategory.forex),
+                                  isActive:
+                                      _selectedCategory == CalculatorCategory.forex,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(
+                                      () => _selectedCategory =
+                                          CalculatorCategory.forex,
+                                    );
+                                  },
+                                ),
+                                _FilterPill(
+                                  label: 'CRYPTO',
+                                  count: _countBy(CalculatorCategory.crypto),
+                                  isActive:
+                                      _selectedCategory ==
+                                      CalculatorCategory.crypto,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(
+                                      () => _selectedCategory =
+                                          CalculatorCategory.crypto,
+                                    );
+                                  },
+                                ),
+                                _FilterPill(
+                                  label: 'FUTURES',
+                                  count: _countBy(CalculatorCategory.futures),
+                                  isActive:
+                                      _selectedCategory ==
+                                      CalculatorCategory.futures,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(
+                                      () => _selectedCategory =
+                                          CalculatorCategory.futures,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: _CategoryButton(
-                  label: 'FOREX',
-                  count: _countBy(CalculatorCategory.forex),
-                  selected: _selectedCategory == CalculatorCategory.forex,
-                  onTap: () => setState(() => _selectedCategory = CalculatorCategory.forex),
+          // Calculator cards
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final CalculatorModel calculator = _visibleCalculators[index];
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
+                  top: index == 0 ? AppSpacing.sm : 0,
+                  bottom: AppSpacing.sm,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _CategoryButton(
-                  label: 'CRYPTO',
-                  count: _countBy(CalculatorCategory.crypto),
-                  selected: _selectedCategory == CalculatorCategory.crypto,
-                  onTap: () => setState(() => _selectedCategory = CalculatorCategory.crypto),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _CategoryButton(
-                  label: 'FUTURES',
-                  count: _countBy(CalculatorCategory.futures),
-                  selected: _selectedCategory == CalculatorCategory.futures,
-                  onTap: () => setState(() => _selectedCategory = CalculatorCategory.futures),
-                ),
-              ),
-            ],
+                child: _CalculatorCard(calculator: calculator)
+                    .animate(delay: Duration(milliseconds: index * 55))
+                    .fadeIn(duration: 250.ms)
+                    .slideY(begin: 0.05, curve: Curves.easeOut),
+              );
+            }, childCount: _visibleCalculators.length),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          ..._visibleCalculators.asMap().entries.map((entry) {
-            final int index = entry.key;
-            final CalculatorModel calculator = entry.value;
-
-            return _CalculatorCard(calculator: calculator)
-                .animate(delay: Duration(milliseconds: index * 55))
-                .fadeIn(duration: 250.ms)
-                .slideY(begin: 0.05, curve: Curves.easeOut);
-          }),
-          const SizedBox(height: 96),
+          // Bottom padding
+          SliverToBoxAdapter(child: SizedBox(height: 96)),
         ],
       ),
     );
   }
 }
 
-class _CategoryButton extends StatelessWidget {
+class _CategoryHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _CategoryHeaderDelegate({required this.child});
+
+  @override
+  double get minExtent => 71;
+
+  @override
+  double get maxExtent => 71;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_CategoryHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
+  }
+}
+
+class _FilterPill extends StatelessWidget {
   final String label;
   final int count;
-  final bool selected;
+  final bool isActive;
   final VoidCallback onTap;
 
-  const _CategoryButton({
+  const _FilterPill({
     required this.label,
     required this.count,
-    required this.selected,
+    required this.isActive,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppRadius.sm,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.accentSurface : AppColors.surface,
-            borderRadius: AppRadius.sm,
-            border: Border.all(
-              color: selected ? AppColors.accent : AppColors.border,
-              width: selected ? 1.0 : 0.5,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.only(right: 7),
+        padding: const EdgeInsets.only(left: 10, right: 7, top: 6, bottom: 6),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFF2A1810) : const Color(0xFF1C1C1E),
+          borderRadius: AppRadius.pill,
+          border: Border.all(
+            color: isActive ? const Color(0xFFE8622A) : const Color(0xFF2C2C2E),
+            width: isActive ? 1.0 : 0.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                letterSpacing: 0.1,
+                color: isActive
+                    ? const Color(0xFFE8622A)
+                    : const Color(0xFF8E8E93),
+              ),
+              child: Text(label),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? AppColors.accent : AppColors.textSecondary,
-                  ),
+            const SizedBox(width: 5),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              constraints: const BoxConstraints(minWidth: 20),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFFE8622A).withValues(alpha: 0.18)
+                    : const Color(0xFF252527),
+                borderRadius: AppRadius.pill,
+              ),
+              child: Text(
+                '$count',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isActive
+                      ? const Color(0xFFE8622A)
+                      : const Color(0xFF48484A),
                 ),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.accent.withValues(alpha: 0.15) : AppColors.surfaceHigh,
-                  borderRadius: AppRadius.pill,
-                ),
-                child: Text(
-                  '$count',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: selected ? AppColors.accent : AppColors.textMuted,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -325,7 +376,7 @@ class _CalculatorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.md,
@@ -341,7 +392,7 @@ class _CalculatorCard extends StatelessWidget {
           splashColor: Colors.transparent,
           highlightColor: AppColors.inkwellHighlight,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Container(
@@ -383,7 +434,10 @@ class _CalculatorCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceHigh,
                     borderRadius: AppRadius.xs,

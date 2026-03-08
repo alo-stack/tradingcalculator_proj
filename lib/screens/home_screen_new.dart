@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../core/app_theme.dart';
 import '../services/market_data_service.dart';
@@ -18,9 +17,7 @@ class HomeScreenNew extends StatefulWidget {
 }
 
 class _HomeScreenNewState extends State<HomeScreenNew> {
-  int _selectedTabIndex = 0; // 0: Calculators, 1: News Calendar, 2: Market Watch, 3: Daily Motivations, 4: Brokers, 5: Prop Firms, 6: Contacts, 7: Settings
-  late DateTime _currentTime;
-  late final Timer _clockTimer;
+  int _selectedTabIndex = 0;
   late final Timer _marketTimer;
   final Random _random = Random();
   bool _marketUpdateInProgress = false;
@@ -37,18 +34,11 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
   @override
   void initState() {
     super.initState();
-    _currentTime = DateTime.now();
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateTime());
     final marketTick = MarketDataService.hasApiKey
         ? const Duration(seconds: 8)
         : const Duration(milliseconds: 1200);
     _marketTimer = Timer.periodic(marketTick, (_) => _updateMarket());
     _updateMarket();
-  }
-
-  void _updateTime() {
-    if (!mounted) return;
-    setState(() => _currentTime = DateTime.now());
   }
 
   Future<void> _updateMarket() async {
@@ -113,287 +103,31 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
 
   void _onTabSelected(int index) {
     setState(() => _selectedTabIndex = index);
-
     if (index == 0) {
       context.go('/calculators');
     } else if (index == 1) {
       context.go('/news');
     }
-
-    // Close drawer after selecting an item on compact layouts.
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  int _mobileNavIndexForTab(int tabIndex) {
-    if (tabIndex <= 4) return tabIndex;
-    return 2;
-  }
-
-  int _tabIndexForMobileNav(int navIndex) {
-    return navIndex;
-  }
-
-  void _openQuickActions(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _QuickActionTile(
-                  icon: Icons.calculate_outlined,
-                  label: 'Calculator',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _onTabSelected(0);
-                  },
-                ),
-                _QuickActionTile(
-                  icon: Icons.calendar_month_outlined,
-                  label: 'News Calendar',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _onTabSelected(1);
-                  },
-                ),
-                _QuickActionTile(
-                  icon: Icons.candlestick_chart,
-                  label: 'Market Watch',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _onTabSelected(2);
-                  },
-                ),
-                _QuickActionTile(
-                  icon: Icons.auto_awesome,
-                  label: 'Daily Motivations',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _onTabSelected(3);
-                  },
-                ),
-                _QuickActionTile(
-                  icon: Icons.contact_phone_outlined,
-                  label: 'Contacts',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _onTabSelected(6);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
   void dispose() {
-    _clockTimer.cancel();
     _marketTimer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 900;
-    final isCompactMobile = screenWidth < 600;
-    final sidebarWidth = (screenWidth * 0.2).clamp(180.0, 230.0);
-    final location = GoRouterState.of(context).uri.path;
-    final showingLocalTab = _selectedTabIndex >= 2;
-
     return Scaffold(
       backgroundColor: AppColors.bg,
-      drawer: isMobile
-          ? Drawer(
-              child: SafeArea(
-                child: _ToolsPanel(
-                  width: 280,
-                  location: location,
-                  showingLocalTab: showingLocalTab,
-                  selectedTabIndex: _selectedTabIndex,
-                  onTabSelected: _onTabSelected,
-                ),
-              ),
-            )
-          : null,
-      bottomNavigationBar: isMobile
-          ? _MobileBottomNav(
-              selectedIndex: _mobileNavIndexForTab(_selectedTabIndex),
-              onSelected: (index) => _onTabSelected(_tabIndexForMobileNav(index)),
-            )
-          : null,
-      body: Row(
-        children: [
-          // LEFT SIDEBAR - Tools/Tabs
-          if (!isMobile)
-            _ToolsPanel(
-              width: sidebarWidth,
-              location: location,
-              showingLocalTab: showingLocalTab,
-              selectedTabIndex: _selectedTabIndex,
-              onTabSelected: _onTabSelected,
-            ),
-
-          // MAIN CONTENT
-          Expanded(
-            child: Column(
-              children: [
-                // TOP BAR - Time, Search, Notifications
-                Container(
-                  height: isMobile ? 56 : 64,
-                  color: AppColors.surface,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isMobile ? 12 : 24,
-                    vertical: isMobile ? 8 : 12,
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      final showSearch = !isMobile && width >= 760;
-                      final showNotification = width >= (isMobile ? 420 : 560);
-                      final showDate = !isMobile && width >= 680;
-                      final searchWidth = width >= 980 ? 250.0 : 180.0;
-
-                      return Row(
-                        children: [
-                          if (isMobile)
-                            Builder(
-                              builder: (context) => IconButton(
-                                icon: Icon(Icons.menu, color: AppColors.textMuted),
-                                splashRadius: 20,
-                                onPressed: () => Scaffold.of(context).openDrawer(),
-                              ),
-                            ),
-                          if (isMobile) const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Trading Calculator',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: isCompactMobile ? 17 : null,
-                                  ),
-                            ),
-                          ),
-                          if (showSearch) ...[
-                            Container(
-                              width: searchWidth,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.bg,
-                                borderRadius: AppRadius.md,
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Search...',
-                                  prefixIcon: Icon(Icons.search, color: AppColors.textMuted),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          if (isMobile) ...[
-                            IconButton(
-                              tooltip: 'Quick Actions',
-                              icon: Icon(Icons.search, color: AppColors.textMuted),
-                              splashRadius: 20,
-                              onPressed: () => _openQuickActions(context),
-                            ),
-                          ],
-                          if (showNotification) ...[
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: AppColors.bg,
-                                borderRadius: AppRadius.md,
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Icon(Icons.notifications_outlined, color: AppColors.textMuted),
-                                  Positioned(
-                                    top: 6,
-                                    right: 6,
-                                    child: Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isCompactMobile ? 8 : 12,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.bg,
-                              borderRadius: AppRadius.md,
-                              border: Border.all(color: AppColors.border),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  DateFormat('HH:mm:ss').format(_currentTime),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (showDate)
-                                  Text(
-                                    DateFormat('MMM dd').format(_currentTime),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                
-                // MAIN CONTENT AREA
-                Expanded(
-                  child: _selectedTabIndex >= 2
-                      ? _buildTabContent(_selectedTabIndex)
-                      : widget.child,
-                ),
-              ],
-            ),
-          ),
-        ],
+      bottomNavigationBar: _MobileBottomNav(
+        selectedIndex: _selectedTabIndex <= 4 ? _selectedTabIndex : 2,
+        onSelected: _onTabSelected,
+      ),
+      body: SafeArea(
+        child: _selectedTabIndex >= 2
+            ? _buildTabContent(_selectedTabIndex)
+            : widget.child,
       ),
     );
   }
@@ -431,182 +165,6 @@ class _HomeScreenNewState extends State<HomeScreenNew> {
       default:
         return const SizedBox();
     }
-  }
-}
-
-class _ToolsPanel extends StatelessWidget {
-  final double width;
-  final String location;
-  final bool showingLocalTab;
-  final int selectedTabIndex;
-  final ValueChanged<int> onTabSelected;
-
-  const _ToolsPanel({
-    required this.width,
-    required this.location,
-    required this.showingLocalTab,
-    required this.selectedTabIndex,
-    required this.onTabSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(right: BorderSide(color: AppColors.border)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(9),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFF08A3C), Color(0xFFE8622A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.trending_up,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'QuickPips',
-                  style: GoogleFonts.orbitron(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: AppColors.accent,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              'Tools',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppColors.textMuted,
-                  ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _TabButton(
-            icon: Icons.calculate_outlined,
-            label: 'Calculator',
-            isActive: !showingLocalTab && location == '/calculators',
-            onTap: () => onTabSelected(0),
-          ),
-          _TabButton(
-            icon: Icons.calendar_month_outlined,
-            label: 'News Calendar',
-            isActive: !showingLocalTab && location == '/news',
-            onTap: () => onTabSelected(1),
-          ),
-          _TabButton(
-            icon: Icons.candlestick_chart,
-            label: 'Market Watch',
-            isActive: selectedTabIndex == 2,
-            onTap: () => onTabSelected(2),
-          ),
-          _TabButton(
-            icon: Icons.auto_awesome,
-            label: 'Daily Motivations',
-            isActive: selectedTabIndex == 3,
-            onTap: () => onTabSelected(3),
-          ),
-          _TabButton(
-            icon: Icons.business_outlined,
-            label: 'Brokers',
-            isActive: selectedTabIndex == 4,
-            onTap: () => onTabSelected(4),
-          ),
-          _TabButton(
-            icon: Icons.workspace_premium_outlined,
-            label: 'Prop Firms',
-            isActive: selectedTabIndex == 5,
-            onTap: () => onTabSelected(5),
-          ),
-          const Spacer(),
-          _TabButton(
-            icon: Icons.contact_phone_outlined,
-            label: 'Contacts',
-            isActive: selectedTabIndex == 6,
-            onTap: () => onTabSelected(6),
-          ),
-          _TabButton(
-            icon: Icons.settings_outlined,
-            label: 'Settings',
-            isActive: selectedTabIndex == 7,
-            onTap: () => onTabSelected(7),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _TabButton({
-    required this.icon,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.accent.withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: AppRadius.md,
-          border: Border.all(
-            color: isActive ? AppColors.accent : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: isActive ? AppColors.accent : AppColors.textMuted),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isActive ? AppColors.accent : AppColors.textMuted,
-                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -650,24 +208,6 @@ class _MobileBottomNav extends StatelessWidget {
           label: 'Brokers',
         ),
       ],
-    );
-  }
-}
-
-class _QuickActionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionTile({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.accent),
-      title: Text(label),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.sm),
     );
   }
 }
@@ -749,25 +289,39 @@ class _MarketWatchTabState extends State<_MarketWatchTab> {
     final selectedPrice = selected?.price ?? 0;
     final selectedChange = selected?.changePct ?? 0;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 1020;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
+    return CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _MarketWatchHeaderDelegate(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 6,
+                bottom: 10,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0A0A0A),
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFF1F1F21), width: 0.5),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'Market Watch',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      'MARKET WATCH',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.5,
+                        color: Color(0xFF8E8E93),
+                      ),
+                    ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -786,37 +340,45 @@ class _MarketWatchTabState extends State<_MarketWatchTab> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Select an instrument to view candlestick chart, current price, and history.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              if (wide)
-                Row(
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 1020;
+
+              return Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 300,
-                      child: _buildWatchlist(),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildChartCard(selectedPrice, selectedChange),
-                    ),
+                    if (wide)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 300,
+                            child: _buildWatchlist(),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _buildChartCard(selectedPrice, selectedChange),
+                          ),
+                        ],
+                      )
+                    else ...[
+                      _buildChartCard(selectedPrice, selectedChange),
+                      const SizedBox(height: 16),
+                      _buildWatchlist(),
+                    ],
                   ],
-                )
-              else ...[
-                _buildChartCard(selectedPrice, selectedChange),
-                const SizedBox(height: 16),
-                _buildWatchlist(),
-              ],
-            ],
+                ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -1104,6 +666,32 @@ class _MarketWatchTabState extends State<_MarketWatchTab> {
       default:
         return Duration(minutes: stepsBack * 5);
     }
+  }
+}
+
+class _MarketWatchHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _MarketWatchHeaderDelegate({required this.child});
+
+  @override
+  double get minExtent => 71;
+
+  @override
+  double get maxExtent => 71;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_MarketWatchHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }
 
@@ -1439,118 +1027,171 @@ class _DailyMotivationsTabState extends State<_DailyMotivationsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Daily Motivations',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Post quotes, mindset reminders, and optional images for your team.',
-            style: TextStyle(color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: AppRadius.md,
-              border: Border.all(color: AppColors.border),
+    return CustomScrollView(
+      slivers: [
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _DailyMotivationsHeaderDelegate(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 6,
+                bottom: 10,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0A0A0A),
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFF1F1F21), width: 0.5),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  'DAILY MOTIVATIONS',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF8E8E93),
+                  ),
+                ),
+              ),
             ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  controller: _quoteController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Write a motivational quote...',
-                    filled: true,
-                    fillColor: AppColors.bg,
-                    border: OutlineInputBorder(borderRadius: AppRadius.sm),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.md,
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _quoteController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Write a motivational quote...',
+                          filled: true,
+                          fillColor: AppColors.bg,
+                          border: OutlineInputBorder(borderRadius: AppRadius.sm),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _authorController,
+                        decoration: InputDecoration(
+                          hintText: 'Author (optional)',
+                          filled: true,
+                          fillColor: AppColors.bg,
+                          border: OutlineInputBorder(borderRadius: AppRadius.sm),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _imageUrlController,
+                        decoration: InputDecoration(
+                          hintText: 'Image URL (optional)',
+                          filled: true,
+                          fillColor: AppColors.bg,
+                          border: OutlineInputBorder(borderRadius: AppRadius.sm),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _addPost,
+                          icon: const Icon(Icons.post_add),
+                          label: const Text('Post Motivation'),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _authorController,
-                  decoration: InputDecoration(
-                    hintText: 'Author (optional)',
-                    filled: true,
-                    fillColor: AppColors.bg,
-                    border: OutlineInputBorder(borderRadius: AppRadius.sm),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _imageUrlController,
-                  decoration: InputDecoration(
-                    hintText: 'Image URL (optional)',
-                    filled: true,
-                    fillColor: AppColors.bg,
-                    border: OutlineInputBorder(borderRadius: AppRadius.sm),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _addPost,
-                    icon: const Icon(Icons.post_add),
-                    label: const Text('Post Motivation'),
-                  ),
-                ),
+                const SizedBox(height: 14),
+                ..._posts.map((post) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.md,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (post.imageUrl.isNotEmpty)
+                          ClipRRect(
+                            borderRadius: AppRadius.sm,
+                            child: Image.network(
+                              post.imageUrl,
+                              height: 140,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                height: 120,
+                                color: AppColors.bg,
+                                alignment: Alignment.center,
+                                child: Text('Unable to load image', style: TextStyle(color: AppColors.textMuted)),
+                              ),
+                            ),
+                          ),
+                        if (post.imageUrl.isNotEmpty) const SizedBox(height: 10),
+                        Text(
+                          '"${post.quote}"',
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '- ${post.author}',
+                          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ],
             ),
           ),
-          const SizedBox(height: 14),
-          ..._posts.map((post) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: AppRadius.md,
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (post.imageUrl.isNotEmpty)
-                    ClipRRect(
-                      borderRadius: AppRadius.sm,
-                      child: Image.network(
-                        post.imageUrl,
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          height: 120,
-                          color: AppColors.bg,
-                          alignment: Alignment.center,
-                          child: Text('Unable to load image', style: TextStyle(color: AppColors.textMuted)),
-                        ),
-                      ),
-                    ),
-                  if (post.imageUrl.isNotEmpty) const SizedBox(height: 10),
-                  Text(
-                    '"${post.quote}"',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '- ${post.author}',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+}
+
+class _DailyMotivationsHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _DailyMotivationsHeaderDelegate({required this.child});
+
+  @override
+  double get minExtent => 71;
+
+  @override
+  double get maxExtent => 71;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_DailyMotivationsHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }
 

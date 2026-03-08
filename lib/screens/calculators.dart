@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/app_theme.dart';
 import '../core/calculator_engine.dart';
 import '../data/symbols_data.dart';
 import '../data/currencies_data.dart';
@@ -152,7 +153,7 @@ class _PipCalculatorScreenState extends State<PipCalculatorScreen> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 border: Border.all(color: Theme.of(context).dividerColor),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppRadius.xs,
               ),
               child: Row(
                 children: [
@@ -162,7 +163,7 @@ class _PipCalculatorScreenState extends State<PipCalculatorScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         color: _getCategoryColor(selectedSymbol!.category).withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.xs,
                       ),
                       child: Icon(
                         _getCategoryIcon(selectedSymbol!.category),

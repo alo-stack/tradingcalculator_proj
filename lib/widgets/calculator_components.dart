@@ -36,34 +36,25 @@ class CalculatorScaffold extends StatelessWidget {
                       }
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      width: 36,
+                      height: 36,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: AppColors.surfaceHigh,
-                        borderRadius: AppRadius.pill,
+                        shape: BoxShape.circle,
                         border: Border.all(color: AppColors.border, width: 0.5),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.chevron_left,
-                            size: 16,
-                            color: AppColors.textSecondary,
-                          ),
-                          Text(
-                            'Back',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.chevron_left,
+                        size: 18,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),
                   const Spacer(),
                   Text(title, style: Theme.of(context).textTheme.titleMedium),
                   const Spacer(),
-                  const SizedBox(width: 70),
+                  const SizedBox(width: 36),
                 ],
               ),
             ),

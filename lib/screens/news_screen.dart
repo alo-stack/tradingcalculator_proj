@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/app_theme.dart';
 import '../services/news_service.dart';
 
@@ -17,7 +19,7 @@ class _NewsScreenState extends State<NewsScreen> {
   List<NewsArticle> forexNews = [];
   List<NewsArticle> futuresNews = [];
   List<EconomicEvent> economicEvents = [];
-  
+
   // filter-related state for forex calendar
   List<String> availableCountries = ['All'];
   String countryFilter = 'All';
@@ -58,7 +60,10 @@ class _NewsScreenState extends State<NewsScreen> {
           economicEvents = results[3] as List<EconomicEvent>;
 
           // update list of countries for selector
-          final countries = economicEvents.map((e) => e.country).toSet().toList();
+          final countries = economicEvents
+              .map((e) => e.country)
+              .toSet()
+              .toList();
           countries.sort();
           availableCountries = ['All', ...countries];
 
@@ -93,192 +98,233 @@ class _NewsScreenState extends State<NewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        titleSpacing: AppSpacing.md,
-        title: Row(
-          children: [
-            Text(
-              'Market News',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.positiveBg,
-                borderRadius: AppRadius.pill,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.positive,
-                      shape: BoxShape.circle,
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          // Pinned category tabs
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _TabHeaderDelegate(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 6,
+                  bottom: 10,
+                ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0A0A0A),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFF1F1F21), width: 0.5),
                   ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Live',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: AppColors.positive,
-                      fontWeight: FontWeight.w500,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        'MARKET NEWS',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                          color: const Color(0xFF8E8E93),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _CategoryTab(
+                                  label: 'CRYPTO',
+                                  isSelected: selectedCategory == NewsCategory.crypto,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(
+                                      () => selectedCategory = NewsCategory.crypto,
+                                    );
+                                  },
+                                ),
+                                _CategoryTab(
+                                  label: 'FOREX',
+                                  isSelected: selectedCategory == NewsCategory.forex,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => selectedCategory = NewsCategory.forex);
+                                  },
+                                ),
+                                _CategoryTab(
+                                  label: 'FUTURES',
+                                  isSelected: selectedCategory == NewsCategory.futures,
+                                  onTap: () {
+                                    HapticFeedback.selectionClick();
+                                    setState(
+                                      () => selectedCategory = NewsCategory.futures,
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          // Category tabs
-          Container(
-            height: 50,
-            color: AppColors.surface,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              children: [
-                _CategoryTab(
-                  label: 'CRYPTO',
-                  isSelected: selectedCategory == NewsCategory.crypto,
-                  onTap: () => setState(() => selectedCategory = NewsCategory.crypto),
-                ),
-                _CategoryTab(
-                  label: 'FOREX',
-                  isSelected: selectedCategory == NewsCategory.forex,
-                  onTap: () => setState(() => selectedCategory = NewsCategory.forex),
-                ),
-                _CategoryTab(
-                  label: 'FUTURES',
-                  isSelected: selectedCategory == NewsCategory.futures,
-                  onTap: () => setState(() => selectedCategory = NewsCategory.futures),
-                ),
-              ],
             ),
           ),
           // Content
-          Expanded(
-            child: _buildBody(),
-          ),
+          _buildSliverBody(),
         ],
       ),
     );
   }
 
-  Widget _buildBody() {
+  SliverList _buildSliverBody() {
     if (isLoading && cryptoNews.isEmpty && economicEvents.isEmpty) {
-      return _buildShimmerLoading();
+      return SliverList(
+        delegate: SliverChildListDelegate([_buildShimmerLoading()]),
+      );
     }
 
     if (errorMessage != null && cryptoNews.isEmpty) {
-      return _buildErrorState();
+      return SliverList(
+        delegate: SliverChildListDelegate([_buildErrorState()]),
+      );
     }
 
     // For Forex, show economic calendar + news
     if (selectedCategory == NewsCategory.forex) {
-      return _buildForexTab();
+      return _buildSliverForexTab();
     }
 
     // For Crypto and Futures, show only news
     final articles = _getSelectedNews();
     if (articles.isEmpty) {
-      return _buildEmptyState();
+      return SliverList(
+        delegate: SliverChildListDelegate([_buildEmptyState()]),
+      );
     }
 
-    return RefreshIndicator(
-      onRefresh: fetchAllNews,
-      backgroundColor: AppColors.surface,
-      color: AppColors.accent,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: articles.length + 1,
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildHeaderSection();
-          }
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        if (index == 0) {
+          return _buildHeaderSection();
+        }
 
-          final article = articles[index - 1];
-          return _NewsCard(article: article)
+        final article = articles[index - 1];
+        return Padding(
+          padding: const EdgeInsets.only(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            bottom: AppSpacing.sm,
+          ),
+          child: _NewsCard(article: article)
               .animate(delay: Duration(milliseconds: (index - 1) * 60))
               .fadeIn(duration: 250.ms)
-              .slideY(begin: 0.04, curve: Curves.easeOut);
-        },
-      ),
+              .slideY(begin: 0.04, curve: Curves.easeOut),
+        );
+      }, childCount: articles.length + 1),
     );
   }
 
-  Widget _buildForexTab() {
-    return RefreshIndicator(
-      onRefresh: fetchAllNews,
-      backgroundColor: AppColors.surface,
-      color: AppColors.accent,
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          _buildHeaderSection(),
-          // Filters for economic calendar
-          if (economicEvents.isNotEmpty) ...[
-            _buildFilterRow(),
-          ],
-          // Economic Calendar Section
-          if (_filteredEconomicEvents.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.md),
-              child: Text(
-                'ECONOMIC CALENDAR',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                ),
-              ),
+  SliverList _buildSliverForexTab() {
+    final children = <Widget>[
+      _buildHeaderSection(),
+      // Filters for economic calendar
+      if (economicEvents.isNotEmpty) _buildFilterRow(),
+      // Economic Calendar Section
+      if (_filteredEconomicEvents.isNotEmpty) ...[
+        Padding(
+          padding: const EdgeInsets.only(
+            top: AppSpacing.md,
+            bottom: AppSpacing.sm,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+          ),
+          child: Text(
+            'ECONOMIC CALENDAR',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
             ),
-            ..._filteredEconomicEvents.asMap().entries.map((entry) {
-              final event = entry.value;
-              return _EconomicEventCard(event: event)
-                  .animate(delay: Duration(milliseconds: entry.key * 50))
-                  .fadeIn(duration: 250.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOut);
-            }),
-          ],
-          // Forex News Section
-          if (forexNews.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.md),
-              child: Text(
-                'FOREX NEWS',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
-                ),
-              ),
+          ),
+        ),
+        ..._filteredEconomicEvents.asMap().entries.map((entry) {
+          final event = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              bottom: AppSpacing.sm,
             ),
-            ...forexNews.asMap().entries.map((entry) {
-              final article = entry.value;
-              return _NewsCard(article: article)
-                  .animate(delay: Duration(milliseconds: entry.key * 50))
-                  .fadeIn(duration: 250.ms)
-                  .slideY(begin: 0.04, curve: Curves.easeOut);
-            }),
-          ],
-          if (forexNews.isEmpty && economicEvents.isEmpty)
-            _buildEmptyState(),
-        ],
-      ),
-    );
+            child: _EconomicEventCard(event: event)
+                .animate(delay: Duration(milliseconds: entry.key * 50))
+                .fadeIn(duration: 250.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOut),
+          );
+        }),
+      ],
+      // Forex News Section
+      if (forexNews.isNotEmpty) ...[
+        Padding(
+          padding: const EdgeInsets.only(
+            top: AppSpacing.md,
+            bottom: AppSpacing.sm,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+          ),
+          child: Text(
+            'FOREX NEWS',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+        ...forexNews.asMap().entries.map((entry) {
+          final article = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              bottom: AppSpacing.sm,
+            ),
+            child: _NewsCard(article: article)
+                .animate(delay: Duration(milliseconds: entry.key * 50))
+                .fadeIn(duration: 250.ms)
+                .slideY(begin: 0.04, curve: Curves.easeOut),
+          );
+        }),
+      ],
+      if (forexNews.isEmpty && economicEvents.isEmpty) _buildEmptyState(),
+    ];
+
+    return SliverList(delegate: SliverChildListDelegate(children));
   }
 
   Widget _buildHeaderSection() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(
+        bottom: AppSpacing.sm,
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+      ),
       child: Row(
         children: [
           Text(
@@ -293,10 +339,7 @@ class _NewsScreenState extends State<NewsScreen> {
           const Spacer(),
           Text(
             'Updated ${_formatTime(lastUpdated ?? DateTime.now())}',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 11, color: AppColors.textMuted),
           ),
         ],
       ),
@@ -304,29 +347,34 @@ class _NewsScreenState extends State<NewsScreen> {
   }
 
   Widget _buildShimmerLoading() {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      children: [
-        _buildHeaderSection(),
-        const SizedBox(height: AppSpacing.sm),
-        Shimmer.fromColors(
-          baseColor: AppColors.surface,
-          highlightColor: AppColors.surfaceHigh,
-          child: Column(
-            children: List.generate(
-              4,
-              (_) => Container(
-                height: 130,
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: AppRadius.md,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Column(
+        children: [
+          _buildHeaderSection(),
+          const SizedBox(height: AppSpacing.sm),
+          Shimmer.fromColors(
+            baseColor: AppColors.surface,
+            highlightColor: AppColors.surfaceHigh,
+            child: Column(
+              children: List.generate(
+                4,
+                (_) => Container(
+                  height: 130,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppRadius.md,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -335,11 +383,7 @@ class _NewsScreenState extends State<NewsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.error_outline, size: 48, color: AppColors.textMuted),
           const SizedBox(height: AppSpacing.md),
           Text(
             'Error loading news',
@@ -361,9 +405,7 @@ class _NewsScreenState extends State<NewsScreen> {
           const SizedBox(height: AppSpacing.lg),
           ElevatedButton(
             onPressed: fetchAllNews,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.accent),
             child: Text(
               'Retry',
               style: GoogleFonts.inter(
@@ -382,11 +424,7 @@ class _NewsScreenState extends State<NewsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.newspaper,
-            size: 48,
-            color: AppColors.textMuted,
-          ),
+          Icon(Icons.newspaper, size: 48, color: AppColors.textMuted),
           const SizedBox(height: AppSpacing.md),
           Text(
             'No news available',
@@ -419,67 +457,93 @@ class _NewsScreenState extends State<NewsScreen> {
       list = list.where((e) => e.country == countryFilter).toList();
     }
     if (impactFilter != 'All') {
-      list = list.where((e) => e.impact.toUpperCase() == impactFilter.toUpperCase()).toList();
+      list = list
+          .where((e) => e.impact.toUpperCase() == impactFilter.toUpperCase())
+          .toList();
     }
     return list;
   }
 
   Widget _buildFilterRow() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(
+        bottom: AppSpacing.sm,
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+      ),
       child: Row(
         children: [
           Expanded(
-            child: DropdownButton<String>(
-              value: countryFilter,
-              isExpanded: true,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox.shrink(),
-              items: availableCountries
-                  .map((c) => DropdownMenuItem(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.md,
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: DropdownButton<String>(
+                value: countryFilter,
+                isExpanded: true,
+                dropdownColor: AppColors.surface,
+                underline: const SizedBox.shrink(),
+                items: availableCountries
+                    .map(
+                      (c) => DropdownMenuItem(
                         value: c,
                         child: Text(
                           c,
                           style: GoogleFonts.inter(
+                            fontSize: 13,
                             color: AppColors.textPrimary,
                           ),
                         ),
-                      ))
-                  .toList(),
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() {
-                  countryFilter = v;
-                });
-                fetchAllNews();
-              },
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    countryFilter = v;
+                  });
+                },
+              ),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: DropdownButton<String>(
-              value: impactFilter,
-              isExpanded: true,
-              dropdownColor: AppColors.surface,
-              underline: const SizedBox.shrink(),
-              items: ['All', 'HIGH', 'MEDIUM', 'LOW']
-                  .map((i) => DropdownMenuItem(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: AppRadius.md,
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: DropdownButton<String>(
+                value: impactFilter,
+                isExpanded: true,
+                dropdownColor: AppColors.surface,
+                underline: const SizedBox.shrink(),
+                items: ['All', 'HIGH', 'MEDIUM', 'LOW']
+                    .map(
+                      (i) => DropdownMenuItem(
                         value: i,
                         child: Text(
                           i,
                           style: GoogleFonts.inter(
+                            fontSize: 13,
                             color: AppColors.textPrimary,
                           ),
                         ),
-                      ))
-                  .toList(),
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() {
-                  impactFilter = v;
-                });
-                fetchAllNews();
-              },
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) {
+                  if (v == null) return;
+                  setState(() {
+                    impactFilter = v;
+                  });
+                },
+              ),
             ),
           ),
         ],
@@ -503,27 +567,63 @@ class _CategoryTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        margin: const EdgeInsets.only(right: 7),
+        padding: const EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 6),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? AppColors.accent : Colors.transparent,
-              width: 2,
-            ),
+          color: isSelected ? const Color(0xFF2A1810) : const Color(0xFF1C1C1E),
+          borderRadius: AppRadius.pill,
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFFE8622A)
+                : const Color(0xFF2C2C2E),
+            width: isSelected ? 1.0 : 0.5,
           ),
         ),
-        child: Text(
-          label,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
           style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? AppColors.accent : AppColors.textSecondary,
-            letterSpacing: 0.5,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            letterSpacing: 0.1,
+            color: isSelected
+                ? const Color(0xFFE8622A)
+                : const Color(0xFF8E8E93),
           ),
+          child: Text(label),
         ),
       ),
     );
+  }
+}
+
+class _TabHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _TabHeaderDelegate({required this.child});
+
+  @override
+  double get minExtent => 71;
+
+  @override
+  double get maxExtent => 71;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_TabHeaderDelegate oldDelegate) {
+    return oldDelegate.child != child;
   }
 }
 
@@ -532,110 +632,145 @@ class _NewsCard extends StatelessWidget {
 
   const _NewsCard({required this.article});
 
+  Future<void> _openArticle() async {
+    if (article.url.isEmpty) return;
+
+    final uri = Uri.parse(article.url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.md,
         border: Border.all(color: AppColors.border, width: 1),
       ),
-      child: Column(
-        children: [
-          if (article.urlToImage != null)
-            Container(
-              height: 120,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
-                ),
-                image: DecorationImage(
-                  image: NetworkImage(article.urlToImage!),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        article.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _openArticle,
+          borderRadius: AppRadius.md,
+          splashColor: AppColors.accent.withValues(alpha: 0.1),
+          highlightColor: AppColors.inkwellHighlight,
+          child: Column(
+            children: [
+              if (article.urlToImage != null)
+                Container(
+                  height: 100,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getSentimentColor(article.sentimentLabel),
-                        borderRadius: AppRadius.pill,
-                      ),
-                      child: Text(
-                        article.sentimentLabel.substring(0, 1),
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
+                    image: DecorationImage(
+                      image: NetworkImage(article.urlToImage!),
+                      fit: BoxFit.cover,
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  article.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        article.source,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          color: AppColors.textMuted,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            article.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getSentimentColor(article.sentimentLabel),
+                            borderRadius: AppRadius.pill,
+                          ),
+                          child: Text(
+                            article.sentimentLabel.substring(0, 1),
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      article.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    Text(
-                      article.timeAgo,
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: AppColors.textMuted,
-                      ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  article.source,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '•',
+                                style: TextStyle(color: AppColors.textMuted),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                article.timeAgo,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.open_in_new,
+                          size: 16,
+                          color: AppColors.textMuted,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -660,14 +795,14 @@ class _EconomicEventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppRadius.md,
         border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -844,10 +979,7 @@ class _DataField extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              color: AppColors.textMuted,
-            ),
+            style: GoogleFonts.inter(fontSize: 10, color: AppColors.textMuted),
           ),
           const SizedBox(height: 4),
           Text(
